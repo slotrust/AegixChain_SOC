@@ -1,0 +1,227 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;700&family=Syne:wght@800&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --color-soc-bg: #000000;
+  --color-soc-surface: #000000;
+  --color-soc-border: #050505; /* Maps to --card in HTML */
+  --color-soc-text: #f3f4f6;
+  --color-soc-muted: #9ca3af;
+  --color-soc-green: #10b981;
+  --color-soc-yellow: #ffb347;
+  --color-soc-red: #ff4757;
+  --color-soc-blue: #00e5c0; /* Mapped to cyan for backward compatibility */
+  --color-soc-cyan: #00e5c0;
+  --color-soc-purple: #7f77dd;
+
+  --font-sans: "DM Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "DM Mono", ui-monospace, SFMono-Regular, monospace;
+  --font-syne: "Syne", sans-serif;
+}
+
+@layer base {
+  body {
+    @apply bg-soc-bg text-soc-text font-sans antialiased;
+    overflow-x: hidden;
+    position: relative;
+  }
+  
+  body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -2;
+    background-image: linear-gradient(rgba(0, 229, 192, 0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(0, 229, 192, 0.03) 1px, transparent 1px);
+    background-size: 50px 50px;
+    pointer-events: none;
+  }
+
+  body::after {
+    content: '';
+    position: fixed;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    z-index: -2;
+    background: radial-gradient(circle at 50% 50%, rgba(0, 229, 192, 0.04) 0%, transparent 50%);
+    animation: pulse-bg 15s ease-in-out infinite alternate;
+    pointer-events: none;
+  }
+}
+
+@keyframes pulse-bg {
+  from { transform: scale(1); }
+  to { transform: scale(1.1); }
+}
+
+/* AegixChain Logo Animations */
+.aegix-logo .glow-orb {
+  position: absolute;
+  width: 100%; height: 100%; border-radius: 50%;
+  background: radial-gradient(circle, rgba(0,229,192,0.11) 0%, transparent 65%);
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  animation: aegix-breathe 4s ease-in-out infinite;
+}
+@keyframes aegix-breathe {
+  0%,100% { opacity:0.75; transform:translate(-50%,-50%) scale(1);   }
+  50%      { opacity:1;    transform:translate(-50%,-50%) scale(1.1); }
+}
+
+.aegix-logo .mark { position: relative; width: 100%; height: 100%; }
+.aegix-logo .mark svg { width: 100%; height: 100%; overflow: visible; }
+
+@keyframes aegix-spin-cw  { to { transform: rotate( 360deg); } }
+@keyframes aegix-spin-ccw { to { transform: rotate(-360deg); } }
+.aegix-logo .ring-deco { animation: aegix-spin-ccw 36s linear infinite; transform-origin: 140px 140px; }
+.aegix-logo .ring-mid  { animation: aegix-spin-cw  24s linear infinite; transform-origin: 140px 140px; }
+
+@keyframes aegix-core-pulse {
+  0%,100% { r: 22px; opacity: 1;    }
+  50%      { r: 28px; opacity: 0.60; }
+}
+.aegix-logo .core-fill { animation: aegix-core-pulse 2.8s ease-in-out infinite; }
+
+@keyframes aegix-scan {
+  0%   { transform: translateY(-115px); opacity: 0;    }
+  8%   { opacity: 0.55; }
+  92%  { opacity: 0.55; }
+  100% { transform: translateY( 115px); opacity: 0;    }
+}
+.aegix-logo .scan-line {
+  animation: aegix-scan 3.4s ease-in-out infinite 2s;
+  transform-box: fill-box;
+  transform-origin: 50% 50%;
+}
+
+@keyframes aegix-draw { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
+.aegix-logo .dl { stroke-dasharray: 1; animation: aegix-draw 0.55s ease-out both; }
+
+.aegix-logo .t-deco  { animation-delay: 0.05s; }
+.aegix-logo .t-outer { animation-delay: 0.2s;  }
+.aegix-logo .t-o2m   { animation-delay: 0.9s;  }
+.aegix-logo .t-mid   { animation-delay: 0.75s; }
+.aegix-logo .t-m2i   { animation-delay: 1.2s;  }
+.aegix-logo .t-diag  { animation-delay: 1.0s;  }
+.aegix-logo .t-i2c   { animation-delay: 1.55s; }
+
+@keyframes aegix-draw-poly { from { stroke-dashoffset: 800; } to { stroke-dashoffset: 0; } }
+.aegix-logo .dp-deco  { stroke-dasharray: 800; animation: aegix-draw-poly 1.4s 0.05s ease-out both; }
+.aegix-logo .dp-outer { stroke-dasharray: 800; animation: aegix-draw-poly 1.0s 0.2s  ease-out both; }
+.aegix-logo .dp-mid   { stroke-dasharray: 500; animation: aegix-draw-poly 0.9s 0.75s ease-out both; }
+
+@keyframes aegix-np    { 0%{r:0;opacity:0} 70%{r:8px;opacity:1} 100%{r:7px;opacity:1}      }
+@keyframes aegix-np-sm { 0%{r:0;opacity:0} 70%{r:7px;opacity:.93} 100%{r:6px;opacity:.93}  }
+@keyframes aegix-np-xs { 0%{r:0;opacity:0} 100%{r:5.5px;opacity:.65}                     }
+.aegix-logo .np    { animation: aegix-np    0.4s ease-out both; }
+.aegix-logo .np-sm { animation: aegix-np-sm 0.4s ease-out both; }
+.aegix-logo .np-xs { animation: aegix-np-xs 0.35s ease-out both; }
+
+.aegix-logo .d055{animation-delay:.55s} .aegix-logo .d062{animation-delay:.62s} .aegix-logo .d069{animation-delay:.69s}
+.aegix-logo .d076{animation-delay:.76s} .aegix-logo .d083{animation-delay:.83s} .aegix-logo .d090{animation-delay:.90s}
+.aegix-logo .d110{animation-delay:1.10s} .aegix-logo .d117{animation-delay:1.17s} .aegix-logo .d124{animation-delay:1.24s}
+.aegix-logo .d131{animation-delay:1.31s} .aegix-logo .d138{animation-delay:1.38s} .aegix-logo .d145{animation-delay:1.45s}
+.aegix-logo .d165{animation-delay:1.65s} .aegix-logo .d172{animation-delay:1.72s} .aegix-logo .d179{animation-delay:1.79s}
+.aegix-logo .d186{animation-delay:1.86s} .aegix-logo .d193{animation-delay:1.93s} .aegix-logo .d200{animation-delay:2.00s}
+
+@keyframes aegix-core-in {
+  from { opacity:0; transform:scale(0.2); }
+  to   { opacity:1; transform:scale(1);   }
+}
+.aegix-logo .core-g { animation: aegix-core-in 0.5s 2.1s cubic-bezier(0.34,1.56,0.64,1) both; transform-origin: 140px 140px; }
+
+@keyframes shimmer {
+  100% { left: 200%; }
+}
+
+@layer utilities {
+  .glass-panel {
+    @apply bg-black/80 backdrop-blur-xl border border-white/10 rounded-lg transition-all duration-300;
+  }
+  .glass-panel:hover {
+    @apply border-soc-cyan shadow-[0_10px_40px_rgba(0,229,192,0.08)];
+  }
+  .neon-text-cyan {
+    text-shadow: 0 0 12px rgba(0, 229, 192, 0.6);
+  }
+  .neon-border-cyan {
+    box-shadow: 0 0 15px rgba(0, 229, 192, 0.15), inset 0 0 10px rgba(0, 229, 192, 0.05);
+  }
+  .neon-border-red {
+    box-shadow: 0 0 15px rgba(255, 71, 87, 0.15), inset 0 0 10px rgba(255, 71, 87, 0.05);
+  }
+  .font-syne {
+    font-family: var(--font-syne);
+  }
+  
+  /* Buttons from HTML */
+  .btn-primary {
+    @apply relative inline-flex px-6 py-3 font-mono text-sm font-bold no-underline rounded overflow-hidden transition-all duration-300 cursor-pointer border-none bg-soc-cyan text-black;
+  }
+  .btn-primary::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, .4), transparent);
+    transition: .5s;
+  }
+  .btn-primary:hover::before {
+    left: 100%;
+  }
+  .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(0, 229, 192, .3);
+  }
+
+  /* Inputs from HTML */
+  .input-c {
+    @apply w-full p-3 bg-black border border-white/10 rounded text-white font-sans transition-all duration-300;
+  }
+  .input-c:focus {
+    @apply outline-none border-soc-cyan shadow-[0_0_10px_rgba(0,229,192,0.2)];
+  }
+}
+
+.markdown-body {
+  @apply leading-relaxed;
+}
+.markdown-body h1, .markdown-body h2, .markdown-body h3 {
+  @apply font-bold mt-4 mb-2 text-soc-text font-syne;
+}
+.markdown-body p {
+  @apply mb-3;
+}
+.markdown-body ul, .markdown-body ol {
+  @apply mb-3 pl-5;
+}
+.markdown-body ul {
+  @apply list-disc;
+}
+.markdown-body ol {
+  @apply list-decimal;
+}
+.markdown-body code {
+  @apply bg-soc-bg px-1.5 py-0.5 rounded font-mono text-soc-cyan text-xs;
+}
+.markdown-body pre {
+  @apply bg-soc-bg p-3 rounded-xl border border-soc-border overflow-x-auto my-3;
+}
+.markdown-body pre code {
+  @apply bg-transparent p-0 text-soc-text;
+}
+.markdown-body blockquote {
+  @apply border-l-4 border-soc-purple pl-4 italic my-3 text-soc-muted;
+}
+
+.dark {
+  color-scheme: dark;
+}
+

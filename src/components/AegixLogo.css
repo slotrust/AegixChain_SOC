@@ -1,0 +1,123 @@
+.aegix-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  z-index: 1;
+}
+
+/* ── Glow orb ── */
+.aegix-glow-orb {
+  position: absolute;
+  width: 150%; height: 150%; border-radius: 50%;
+  background: radial-gradient(circle, rgba(0,229,192,0.11) 0%, transparent 65%);
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  animation: breathe 4s ease-in-out infinite;
+}
+@keyframes breathe {
+  0%,100% { opacity:0.75; transform:translate(-50%,-50%) scale(1);   }
+  50%      { opacity:1;    transform:translate(-50%,-50%) scale(1.1); }
+}
+
+/* ── SVG mark ── */
+.aegix-mark { position: relative; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; }
+.aegix-mark svg { width: 100%; height: 100%; max-width: 100%; max-height: 100%; overflow: visible; }
+
+/* ── Spinning rings ── */
+@keyframes spin-cw  { to { transform: rotate( 360deg); } }
+@keyframes spin-ccw { to { transform: rotate(-360deg); } }
+.ring-deco { animation: spin-ccw 36s linear infinite; transform-origin: 140px 140px; }
+.ring-mid  { animation: spin-cw  24s linear infinite; transform-origin: 140px 140px; }
+
+/* ── Core pulse ── */
+@keyframes core-pulse {
+  0%,100% { r: 22; opacity: 1;    }
+  50%      { r: 28; opacity: 0.60; }
+}
+.core-fill { animation: core-pulse 2.8s ease-in-out infinite; }
+
+/* ── Scan line ── */
+@keyframes scan {
+  0%   { transform: translateY(-115px); opacity: 0;    }
+  8%   { opacity: 0.55; }
+  92%  { opacity: 0.55; }
+  100% { transform: translateY( 115px); opacity: 0;    }
+}
+.scan-line {
+  animation: scan 3.4s ease-in-out infinite 2s;
+  transform-box: fill-box;
+  transform-origin: 50% 50%;
+}
+
+/* ── Universal draw-on for lines (pathLength="1" on each line) ── */
+@keyframes draw { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
+.dl { stroke-dasharray: 1; animation: draw 0.55s ease-out both; }
+
+/* timing layers */
+.t-deco  { animation-delay: 0.05s; }
+.t-outer { animation-delay: 0.2s;  }
+.t-o2m   { animation-delay: 0.9s;  } /* outer → mid */
+.t-mid   { animation-delay: 0.75s; }
+.t-m2i   { animation-delay: 1.2s;  } /* mid → inner */
+.t-diag  { animation-delay: 1.0s;  }
+.t-i2c   { animation-delay: 1.55s; } /* inner → core */
+
+/* polygon draw-on */
+@keyframes draw-poly { from { stroke-dashoffset: 800; } to { stroke-dashoffset: 0; } }
+.dp-deco  { stroke-dasharray: 800; animation: draw-poly 1.4s 0.05s ease-out both; }
+.dp-outer { stroke-dasharray: 800; animation: draw-poly 1.0s 0.2s  ease-out both; }
+.dp-mid   { stroke-dasharray: 500; animation: draw-poly 0.9s 0.75s ease-out both; }
+
+/* ── Node pop-in ── */
+@keyframes np    { 0%{r:0;opacity:0} 70%{r:8;opacity:1} 100%{r:7;opacity:1}      }
+@keyframes np-sm { 0%{r:0;opacity:0} 70%{r:7;opacity:.93} 100%{r:6;opacity:.93}  }
+@keyframes np-xs { 0%{r:0;opacity:0} 100%{r:5.5;opacity:.65}                     }
+.np    { animation: np    0.4s ease-out both; }
+.np-sm { animation: np-sm 0.4s ease-out both; }
+.np-xs { animation: np-xs 0.35s ease-out both; }
+
+.d055{animation-delay:.55s} .d062{animation-delay:.62s} .d069{animation-delay:.69s}
+.d076{animation-delay:.76s} .d083{animation-delay:.83s} .d090{animation-delay:.90s}
+.d110{animation-delay:1.10s} .d117{animation-delay:1.17s} .d124{animation-delay:1.24s}
+.d131{animation-delay:1.31s} .d138{animation-delay:1.38s} .d145{animation-delay:1.45s}
+.d165{animation-delay:1.65s} .d172{animation-delay:1.72s} .d179{animation-delay:1.79s}
+.d186{animation-delay:1.86s} .d193{animation-delay:1.93s} .d200{animation-delay:2.00s}
+
+/* ── Core entrance ── */
+@keyframes core-in {
+  from { opacity:0; transform:scale(0.2); }
+  to   { opacity:1; transform:scale(1);   }
+}
+.core-g { animation: core-in 0.5s 2.1s cubic-bezier(0.34,1.56,0.64,1) both; transform-origin: 140px 140px; }
+
+/* ── Wordmark ── */
+@keyframes fade-up {
+  from { opacity:0; transform:translateY(14px); }
+  to   { opacity:1; transform:translateY(0);    }
+}
+.wordmark {
+  animation: fade-up 0.7s 2.4s ease both;
+  opacity: 0; animation-fill-mode: forwards;
+  text-align: center;
+}
+.wm-name {
+  font-family: 'Syne', sans-serif;
+  font-size: 42px; font-weight: 900;
+  color: #f0f2f5; letter-spacing: -1.5px; line-height: 1;
+}
+.wm-name .cyan { color: #00e5c0; }
+.wm-name .ai   { font-size: 22px; color: #8ba8b5; vertical-align: super; margin-left: 3px; }
+.wm-tag {
+  font-family: 'DM Mono', monospace;
+  font-size: 10.5px; letter-spacing: 4px;
+  color: #2a5060; margin-top: 9px; text-transform: uppercase;
+}
+
+.divider {
+  width: 220px; height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(0,229,192,0.28), transparent);
+  animation: fade-up 0.5s 2.6s ease both;
+  opacity: 0; animation-fill-mode: forwards;
+}

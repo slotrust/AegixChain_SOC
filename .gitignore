@@ -1,0 +1,12 @@
+node_modules/
+build/
+coverage/
+.DS_Store
+*.log
+.env*
+!.env.example
+firebase-applet-config.json
+soc.db
+soc.db-journal
+soc.db-wal
+soc.db-shm

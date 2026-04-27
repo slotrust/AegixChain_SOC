@@ -1,0 +1,102 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    //
+    // Collection: users
+    // Document ID: {userId} (matches Firebase Auth UID)
+    // Fields:
+    //   - uid: string (required) - Firebase Auth UID
+    //   - email: string (required) - User email address
+    //   - displayName: string (optional) - User display name
+    //   - photoURL: string (optional) - User profile picture URL
+    //   - role: string (required, enum: ['admin', 'analyst']) - User role
+    //   - lastLogin: string (optional, ISO 8601) - Last login timestamp
+    //
+    // ===============================================================
+
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() &&
+        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' ||
+          (request.auth.token.email == "1dt24cy038@dsatm.edu.in" && request.auth.token.email_verified == true) ||
+          (request.auth.token.email == "blueparasite1234@gmail.com" && request.auth.token.email_verified == true));
+    }
+
+    function isValidEmail(email) {
+      return email is string &&
+        email.matches("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$");
+    }
+
+    function isValidUrl(url) {
+      return url is string &&
+        (url.matches("^https://.*") || url.matches("^http://.*"));
+    }
+
+    function hasRequiredFields(fields) {
+      return request.resource.data.keys().hasAll(fields);
+    }
+
+    function hasOnlyAllowedFields(fields) {
+      return request.resource.data.keys().hasOnly(fields);
+    }
+
+    // ===============================================================
+    // Domain Validators
+    // ===============================================================
+
+    function isValidUser(data) {
+      return hasOnlyAllowedFields(['uid', 'email', 'displayName', 'photoURL', 'role', 'lastLogin']) &&
+             data.uid is string && data.uid.size() > 0 &&
+             data.email is string && isValidEmail(data.email) &&
+             (data.role == 'admin' || data.role == 'analyst') &&
+             (!('displayName' in data) || (data.displayName is string && data.displayName.size() < 100)) &&
+             (!('photoURL' in data) || isValidUrl(data.photoURL)) &&
+             (!('lastLogin' in data) || data.lastLogin is string);
+    }
+
+    // ===============================================================
+    // Rules
+    // ===============================================================
+
+    match /users/{userId} {
+      // Users can read their own profile. Admins can read all profiles.
+      // Note: We don't allow blanket read access to prevent PII leaks.
+      allow read: if isAuthenticated() && (isOwner(userId) || isAdmin());
+
+      // Users can create their own profile if it's an 'analyst' role.
+      // Admins can create any profile.
+      allow create: if isAuthenticated() && 
+                    isValidUser(request.resource.data) &&
+                    (
+                      (isOwner(userId) && request.resource.data.role == 'analyst') || 
+                      isAdmin()
+                    );
+
+      // Users can update their own profile but NOT their role.
+      // Admins can update any profile including roles.
+      allow update: if isAuthenticated() && 
+                    isValidUser(request.resource.data) &&
+                    (
+                      (isOwner(userId) && request.resource.data.role == resource.data.role) || 
+                      isAdmin()
+                    );
+
+      // Only admins can delete profiles.
+      allow delete: if isAdmin();
+    }
+  }
+}
