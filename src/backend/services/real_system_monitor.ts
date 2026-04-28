@@ -1,6 +1,7 @@
 import fs from 'fs';
 import { systemService } from './system_service.js';
 import si from 'systeminformation';
+import { execSync } from 'child_process';
 
 let isPollingProcesses = false;
 let isPollingNetwork = false;
@@ -17,13 +18,12 @@ export const realSystemMonitor = {
       if (isPollingProcesses) return;
       isPollingProcesses = true;
       try {
-        const { execSync } = require('child_process');
         const psOutput = execSync('ps -axo pid,pcpu,pmem,user,comm,args --sort=-pcpu | head -n 101').toString();
         const lines = psOutput.split('\n').filter(Boolean).slice(1);
         
         const newCache = [];
         for (const line of lines) {
-          const parts = line.trim().split(/\\s+/);
+          const parts = line.trim().split(/\s+/);
           if (parts.length < 6) continue;
           
           const pid = parseInt(parts[0], 10);
@@ -34,9 +34,9 @@ export const realSystemMonitor = {
           const cmdline = parts.slice(5).join(' ');
           const status = 'RUNNING';
           
-          const suspiciousRegex = /\\b(nc|nmap|miner|exploit|reverse|meterpreter|beacon|cobalt|malware|keylogger|ncat|reverse_shell|base64)\\b/i;
+          const suspiciousRegex = /\b(nc|nmap|miner|exploit|reverse|meterpreter|beacon|cobalt|malware|keylogger|ncat|reverse_shell|base64)\b/i;
           const isSuspicious = suspiciousRegex.test(name) || suspiciousRegex.test(cmdline);
-          const isDevCommand = /\\b(vite|node|tsx|npm|python|python3|concurrently|sh|ps|bash|grep|cat|ls|npx|systeminformation)\\b/i.test(cmdline) || /\\b(vite|node|tsx|npm|python|python3|concurrently|sh|ps|bash)\\b/i.test(name);
+          const isDevCommand = /\b(vite|node|tsx|npm|python|python3|concurrently|sh|ps|bash|grep|cat|ls|npx|systeminformation)\b/i.test(cmdline) || /\b(vite|node|tsx|npm|python|python3|concurrently|sh|ps|bash)\b/i.test(name);
           const flagged = isSuspicious && !isDevCommand;
           
           const details = {
@@ -62,7 +62,8 @@ export const realSystemMonitor = {
             });
           }
         }
-        processCache = newCache;
+        processCache.length = 0;
+        processCache.push(...newCache);
 
         // 2. Critical File System Access Polling (Integrity Check)
 
@@ -103,6 +104,7 @@ export const realSystemMonitor = {
         }
 
       } catch (error) {
+        console.error("Error in realSystemMonitor (processes):", error);
       } finally {
         isPollingProcesses = false;
       }
@@ -145,7 +147,8 @@ export const realSystemMonitor = {
             });
           }
         }
-        networkCache = newCache;
+        networkCache.length = 0;
+        networkCache.push(...newCache);
       } catch (error) {
       } finally {
         isPollingNetwork = false;
