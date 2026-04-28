@@ -18,21 +18,19 @@ export const realSystemMonitor = {
       if (isPollingProcesses) return;
       isPollingProcesses = true;
       try {
-        const psOutput = execSync('ps -axo pid,pcpu,pmem,user,comm,args --sort=-pcpu | head -n 101').toString();
-        const lines = psOutput.split('\n').filter(Boolean).slice(1);
+        const processData = await si.processes();
+        // Sort by cpu to match previous behavior
+        const sortedProcesses = processData.list.sort((a, b) => (b.cpu === Infinity ? 0 : b.cpu) - (a.cpu === Infinity ? 0 : a.cpu)).slice(0, 100);
         
         const newCache = [];
-        for (const line of lines) {
-          const parts = line.trim().split(/\s+/);
-          if (parts.length < 6) continue;
-          
-          const pid = parseInt(parts[0], 10);
-          const cpu = parseFloat(parts[1]) || 0;
-          const mem = parseFloat(parts[2]) || 0;
-          const user = parts[3];
-          const name = parts[4];
-          const cmdline = parts.slice(5).join(' ');
-          const status = 'RUNNING';
+        for (const proc of sortedProcesses) {
+          const pid = proc.pid;
+          const cpu = proc.cpu === Infinity ? 0 : proc.cpu || 0;
+          const mem = proc.mem || 0;
+          const user = proc.user || 'Unknown';
+          const name = proc.name || 'Unknown';
+          const cmdline = (proc.path ? proc.path + ' ' : '') + (proc.command || '') + ' ' + (proc.params || '');
+          const status = proc.state || 'RUNNING';
           
           const suspiciousRegex = /\b(nc|nmap|miner|exploit|reverse|meterpreter|beacon|cobalt|malware|keylogger|ncat|reverse_shell|base64)\b/i;
           const isSuspicious = suspiciousRegex.test(name) || suspiciousRegex.test(cmdline);

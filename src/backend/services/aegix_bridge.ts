@@ -114,10 +114,26 @@ class AegixBridge extends EventEmitter {
                   import('./ips_service.js').then(({ ipsService }) => {
                     if (action === "BLOCK_IP") {
                       ipsService.blockIp(sourceIp, `[RL Brain] ${reasoning}`, 1); // 1 hr block
-                    } else if (action === "ISOLATE_ENDPOINT") {
+                    } else if (action === "ISOLATE_ENDPOINT" || action === "ISOLATE_HOST" || action === "LIMIT_NETWORK") {
                       ipsService.blockIp(sourceIp, `[RL Brain] Endpoint Isolation: ${reasoning}`, 24); // 24 hr block
                     }
                   }).catch(e => console.error("Failed to dynamically import ipsService:", e));
+                }
+
+                if (action === "KILL_PROCESS") {
+                  if (msg.data.event?.pid || msg.data.event?.details?.pid) {
+                    const pidToKill = msg.data.event?.pid || msg.data.event?.details?.pid;
+                    try {
+                      import('child_process').then(({ exec }) => {
+                          exec(`kill -9 ${pidToKill}`, (err) => {
+                             if (err) console.error(`Failed to kill process ${pidToKill}:`, err);
+                             else console.log(`[Aegix Autonomous] Killed process ${pidToKill}`);
+                          });
+                      });
+                    } catch (e) {
+                      console.error("Failed to execute KILL_PROCESS action:", e);
+                    }
+                  }
                 }
               }
               
