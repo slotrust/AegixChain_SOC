@@ -207,7 +207,7 @@ class MultiAgentSystem extends EventEmitter {
       const { eventData, findings, riskLevel, memoryContext, mitreContext } = msg.payload;
 
       try {
-        const prompt = `As the Aegix LLM Agent, analyze this security event.
+        const prompt = `As the Nova LLM Agent, analyze this security event.
 Event: \${JSON.stringify(eventData)}
 Findings: \${findings.join("; ")}
 Risk Level: \${riskLevel}

@@ -7,7 +7,6 @@ import socket
 import os
 import platform
 
-
 # Configuration
 BACKEND_URL = "http://localhost:3000/api/system/system-data"
 POLL_INTERVAL = 3  # seconds
@@ -19,7 +18,7 @@ def get_process_data():
             pinfo = proc.info
             cmdline = " ".join(pinfo['cmdline']) if pinfo['cmdline'] else ""
             
-            # High-priority suspicious keywords for Aegix analysis
+            # High-priority suspicious keywords for Nova analysis
             import re
             suspicious_pattern = re.compile(r'\b(miner|hack|exploit|malware|keylogger|ncat|reverse_shell|base64|meterpreter|beacon|cobalt)\b', re.IGNORECASE)
             is_malicious = bool(suspicious_pattern.search(pinfo['name'])) or bool(suspicious_pattern.search(cmdline))
@@ -112,5 +111,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-

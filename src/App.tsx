@@ -12,7 +12,7 @@ import NetworkPanel from './components/NetworkPanel';
 import ForensicsPanel from './components/ForensicsPanel';
 import UserManagement from './components/UserManagement';
 import IPSManagement from './components/IPSManagement';
-import AegixBrain from './components/AegixBrain';
+import NovaBrain from './components/NovaBrain';
 import EndpointEDR from './components/EndpointEDR';
 import BehavioralAI from './components/BehavioralAI';
 import MultiAgentDashboard from './components/MultiAgentDashboard';
@@ -25,7 +25,7 @@ import { signOut } from 'firebase/auth';
 
 import { ErrorBoundary } from './components/ErrorBoundary';
 
-import AegixLogo from './components/AegixLogo';
+import NovaLogo from './components/NovaLogo';
 import VoiceAssistant from './components/VoiceAssistant';
 
 export default function App() {
@@ -224,8 +224,8 @@ export default function App() {
     switch (activeTab) {
       case 'dashboard':
         return <Dashboard onSelectLog={setSelectedIncident} onInvestigate={handleInvestigate} />;
-      case 'aegix':
-        return <AegixBrain />;
+      case 'nova':
+        return <NovaBrain />;
       case 'edr':
         return <EndpointEDR />;
       case 'processes':
@@ -434,7 +434,7 @@ export default function App() {
           ) : (
             <div className="relative flex items-center justify-center w-full h-full">
               <div className="absolute inset-0 bg-white blur-md opacity-20 rounded-full animate-pulse"></div>
-              <AegixLogo className="w-8 h-8 relative z-10" />
+              <NovaLogo className="w-8 h-8 relative z-10" />
             </div>
           )}
         </button>

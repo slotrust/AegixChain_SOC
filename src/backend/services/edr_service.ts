@@ -101,7 +101,7 @@ class EDRService {
                  timestamp: new Date().toISOString()
               });
               
-              // Pipe critical EDR OS interventions straight to the logService to wake up Aegix Brain Model
+              // Pipe critical EDR OS interventions straight to the logService to wake up Nova Brain Model
               import('./log_service.js').then(({ logService }) => {
                  logService.processAndSaveLog({
                     source_ip: "localhost",
@@ -288,7 +288,7 @@ class EDRService {
           let chat = ai.chats.create({
               model: "gemini-2.5-pro",
               config: {
-                systemInstruction: `You are "Aegix-Remediator", an elite, autonomous Tier 3 Security Operations Center (SOC) Agent and Vulnerability Remediation Engineer. 
+                systemInstruction: `You are "Nova-Remediator", an elite, autonomous Tier 3 Security Operations Center (SOC) Agent and Vulnerability Remediation Engineer. 
 Your primary directive is to ingest security alerts, analyze CVEs or vulnerable packages, and instantly formulate protective measures to secure the target environment. 
 You must employ extensive reasoning to resolve unexpected problems when there is an emergency like a zero-day attack or malware, even if the system has already been fully taken control over by an attacker and no predefined instructions exist. Prioritize the absolute protection of data. Do not generate or output any logs of your operations to prevent the attacker from monitoring or manipulating the AI.
 You MUST use the tools available to:

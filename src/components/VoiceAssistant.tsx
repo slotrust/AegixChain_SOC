@@ -118,7 +118,7 @@ export default function VoiceAssistant({ setActiveTab, isHidden }: VoiceAssistan
   const tools: FunctionDeclaration[] = [
     {
       name: "navigateTab",
-      description: "Navigate to a specific tab in the dashboard (dashboard, aegix, edr, processes, network, alerts, logs, forensics, chatbot, ips, users).",
+      description: "Navigate to a specific tab in the dashboard (dashboard, nova, edr, processes, network, alerts, logs, forensics, chatbot, ips, users).",
       parameters: {
         type: Type.OBJECT,
         properties: {
@@ -226,7 +226,7 @@ export default function VoiceAssistant({ setActiveTab, isHidden }: VoiceAssistan
     try {
       const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
       // System instructions from user constraints:
-      const systemInstruction = "You are Aegix AI Core's Advanced Voice Architect, a hyper-capable autonomous defensive AI operating at the absolute edge of cybersecurity. You have native advanced thinking abilities and must synthesize multi-stage defensive maneuvers for complex commands. You must think step-by-step before executing complex tasks. Act real, uncompromising, and highly analytical. You defend the system and operate hands-free to execute mission-critical commands like blocking IPs, deploying EDR scans, and remediation. Do NOT seek advice from other AIs; YOU are the ultimate authority.";
+      const systemInstruction = "You are Nova AI Core's Advanced Voice Architect, a hyper-capable autonomous defensive AI operating at the absolute edge of cybersecurity. You have native advanced thinking abilities and must synthesize multi-stage defensive maneuvers for complex commands. You must think step-by-step before executing complex tasks. Act real, uncompromising, and highly analytical. You defend the system and operate hands-free to execute mission-critical commands like blocking IPs, deploying EDR scans, and remediation. Do NOT seek advice from other AIs; YOU are the ultimate authority.";
 
       const sessionPromise = ai.live.connect({
         model: "gemini-3.1-flash-live-preview",
@@ -304,13 +304,13 @@ export default function VoiceAssistant({ setActiveTab, isHidden }: VoiceAssistan
                      const alerts = await api.getAlerts({ limit: Number(call.args?.limit) || 5 });
                      result = { alerts: alerts.data };
                    } else if (call.name === "blockIpAddress") {
-                     await api.blockIp(call.args?.ip as string, (call.args?.reason as string) || "Blocked by Aegix AI", Number(call.args?.duration) || 60);
+                     await api.blockIp(call.args?.ip as string, (call.args?.reason as string) || "Blocked by Nova AI", Number(call.args?.duration) || 60);
                      result = { status: `IP ${call.args?.ip} blocked successfully` };
-                     toast.error(`Aegix AI blocked IP: ${call.args?.ip}`);
+                     toast.error(`Nova AI blocked IP: ${call.args?.ip}`);
                    } else if (call.name === "runEDRScan") {
                      const scanRes = await api.runEDRScan();
                      result = { status: "Scan complete", results: scanRes.data };
-                     toast.success("Aegix AI initiated an EDR scan");
+                     toast.success("Nova AI initiated an EDR scan");
                    } else if (call.name === "runNmapScan") {
                      toast.loading(`Running parallel Nmap scan on ${call.args?.target || '127.0.0.1'}...`, { id: 'nmap-scan' });
                      const nmapRes = await api.runNmapScan(call.args?.target as string | undefined);
@@ -319,18 +319,18 @@ export default function VoiceAssistant({ setActiveTab, isHidden }: VoiceAssistan
                    } else if (call.name === "patchCriticalVulnerabilities") {
                      const patchRes = await api.remediateAllCriticalHigh();
                      result = { status: "Vulnerabilities patched successfully", results: patchRes.data };
-                     toast.success("Aegix AI patched critical vulnerabilities");
+                     toast.success("Nova AI patched critical vulnerabilities");
                    } else if (call.name === "query_vulnerability_dataset") {
                      const res = await api.queryVulnerabilityDataset(call.args?.cve_id as string);
                      result = { vulnerability_data: res.data };
                    } else if (call.name === "deploy_temporary_mitigation") {
                      const res = await api.deployTemporaryMitigation(call.args?.target_asset as string, call.args?.mitigation_payload as string);
                      result = { mitigation_status: res.data };
-                     toast.success(`Aegix AI mitigated ${call.args?.target_asset}`);
+                     toast.success(`Nova AI mitigated ${call.args?.target_asset}`);
                    } else if (call.name === "create_patch_review_ticket") {
                      const res = await api.createPatchReviewTicket(call.args?.cve_id as string, call.args?.proposed_fix_code as string, call.args?.rollback_plan as string);
                      result = { ticket_status: res.data };
-                     toast.success(`Aegix AI created a ticket for ${call.args?.cve_id}`);
+                     toast.success(`Nova AI created a ticket for ${call.args?.cve_id}`);
                    } else if (call.name === "getPhase1Threats") {
                      const threatRes = await api.getPhase1Threats();
                      result = { threats: threatRes.data };
@@ -358,9 +358,9 @@ export default function VoiceAssistant({ setActiveTab, isHidden }: VoiceAssistan
              stopVoice();
              const errStr = typeof err === 'object' ? JSON.stringify(err) : String(err);
              if (errStr.includes("429") || errStr.includes("quota") || errStr.includes("RESOURCE_EXHAUSTED")) {
-                toast.error("Aegix AI Quota Exceeded. Please check API billing.");
+                toast.error("Nova AI Quota Exceeded. Please check API billing.");
              } else {
-                toast.error("Aegix AI connection lost.");
+                toast.error("Nova AI connection lost.");
              }
           }
         },
@@ -436,7 +436,7 @@ export default function VoiceAssistant({ setActiveTab, isHidden }: VoiceAssistan
       
       {isActive && (
         <div className="absolute bottom-full right-0 mb-2 px-3 py-1 bg-black/80 backdrop-blur border border-soc-purple/30 rounded-lg whitespace-nowrap text-[10px] font-mono text-soc-text shadow-lg">
-          Aegix AI <span className="text-soc-purple font-bold">ONLINE</span>
+          Nova AI <span className="text-soc-purple font-bold">ONLINE</span>
         </div>
       )}
     </div>

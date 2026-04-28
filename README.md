@@ -1,15 +1,15 @@
-# 🛡️ Aegix - CyberSOC AI Platform
+# 🛡️ Nova - CyberSOC AI Platform
 
 ![CyberSOC Banner](https://img.shields.io/badge/CyberSOC-AI--Powered_Security-0ea5e9?style=for-the-badge)
 
-Aegix CyberSOC is a cutting-edge, real-time, AI-driven Security Operations Center (SOC) platform engineered to defend modern infrastructures. Built as a full-stack web application with a responsive React frontend and a powerful Node.js/Express backend, it provides unparalleled visibility into host system health and network security by monitoring real hardware and operating system parameters. 
+Nova CyberSOC is a cutting-edge, real-time, AI-driven Security Operations Center (SOC) platform engineered to defend modern infrastructures. Built as a full-stack web application with a responsive React frontend and a powerful Node.js/Express backend, it provides unparalleled visibility into host system health and network security by monitoring real hardware and operating system parameters. 
 
 **What is the app all about?**
-The app is a comprehensive security tool designed for DevOps teams, sysadmins, and cybersecurity professionals. Instead of relying on simulated or mock data, Aegix directly interfaces with the underlying host operating system to retrieve authentic system processes (`ps`), active network connections (`ss` or `systeminformation`), and access logs. It processes this continuous stream of real-time telemetry through an embedded custom machine learning engine to detect anomalies, generate instantaneous alerts, and invoke an automated Intrusion Prevention System (IPS) to actively block malicious actors.
+The app is a comprehensive security tool designed for DevOps teams, sysadmins, and cybersecurity professionals. Instead of relying on simulated or mock data, Nova directly interfaces with the underlying host operating system to retrieve authentic system processes (`ps`), active network connections (`ss` or `systeminformation`), and access logs. It processes this continuous stream of real-time telemetry through an embedded custom machine learning engine to detect anomalies, generate instantaneous alerts, and invoke an automated Intrusion Prevention System (IPS) to actively block malicious actors.
 
 ## ✨ Key Features
 
-- **📊 Real System Monitoring (No Simulations):** Aegix accesses real system data from the machine it runs on. It monitors live host system processes and active network connections directly from the underlying environment, ensuring that the telemetry you see represents actual system state.
+- **📊 Real System Monitoring (No Simulations):** Nova accesses real system data from the machine it runs on. It monitors live host system processes and active network connections directly from the underlying environment, ensuring that the telemetry you see represents actual system state.
 - **🤖 AI Anomaly Detection:** Automated threat detection using custom ML feature extraction and prediction, analyzing patterns in real-time system logs.
 - **🛡️ Intrusion Prevention System (IPS):** Automated defense mechanism that blocks malicious IP addresses based on high anomaly scores or brute force attack detection.
 - **🛑 Brute Force Protection:** Built-in rate limiting and automatic IP blocking for repeated failed login attempts.
@@ -21,7 +21,7 @@ The app is a comprehensive security tool designed for DevOps teams, sysadmins, a
 
 ## 🏗️ Architecture
 
-Aegix utilizes a modern, decoupled client-server architecture packed into a unified full-stack application suitable for diverse deployment environments:
+Nova utilizes a modern, decoupled client-server architecture packed into a unified full-stack application suitable for diverse deployment environments:
 
 1. **Frontend Layer (Client):** 
    - A single-page application built with **React 18** and **Vite**.

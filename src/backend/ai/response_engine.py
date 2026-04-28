@@ -30,7 +30,7 @@ class DeceptionMesh:
         if trap_type == "fake_credentials":
             # Generate fake realistic credentials
             fake_creds = [
-                "aegix_admin:Admin@2026!#",
+                "nova_admin:Admin@2026!#",
                 "db_service:sup3r_s3cr3t_p@ss",
                 "aws_access_key:AKIAIOSFODNN7EXAMPLE",
                 "aws_secret_key:wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
@@ -38,7 +38,7 @@ class DeceptionMesh:
             creds_str = "\\n".join(fake_creds)
             
             # Actually write these to a file to make the honeypot "real"
-            vault_dir = "/app/applet/aegix/honeypot_vault"
+            vault_dir = "/app/applet/nova/honeypot_vault"
             os.makedirs(vault_dir, exist_ok=True)
             with open(os.path.join(vault_dir, "credentials.txt"), "w") as f:
                 f.write(creds_str)
@@ -87,7 +87,7 @@ class DeceptionMesh:
 
                     def check_auth_password(self, username, password):
                         print(json.dumps({
-                            "type": "aegix_result",
+                            "type": "nova_result",
                             "data": {
                                 "analysis": f"Deception Triggered: SSH Login attempt on honeypot port {port}",
                                 "action": "HONEYPOT_TRIGGER",
@@ -166,7 +166,7 @@ class DeceptionMesh:
                                     cmd_str = cmd_buffer.strip()
                                     if cmd_str:
                                         print(json.dumps({
-                                            "type": "aegix_result",
+                                            "type": "nova_result",
                                             "data": {
                                                 "analysis": f"Deception Executed: Attacker ran command '{cmd_str}' on port {port}",
                                                 "action": "HONEYPOT_CMD",
@@ -327,7 +327,7 @@ class ResponseEngine:
                                 
                             # Emit detailed honeypot fingerprint event
                             print(json.dumps({
-                                "type": "aegix_result",
+                                "type": "nova_result",
                                 "data": {
                                     "analysis": f"Advanced Honeypot breached on port {port} by {addr[0]}",
                                     "action": "HONEYPOT_TRIGGER",
@@ -341,7 +341,7 @@ class ResponseEngine:
                             # Mimic real system file structure and serve the fake credentials if requested
                             if "credentials.txt" in request_line:
                                 try:
-                                    with open("/app/applet/aegix/honeypot_vault/credentials.txt", "r") as f:
+                                    with open("/app/applet/nova/honeypot_vault/credentials.txt", "r") as f:
                                         creds = f.read()
                                     fake_response = f"HTTP/1.1 200 OK\\r\\nServer: Ubuntu/Nginx\\r\\nContent-Type: text/plain\\r\\n\\r\\n{creds}"
                                 except Exception:
@@ -372,7 +372,7 @@ class ResponseEngine:
     def execute_data_fortress(self, incident_id: str) -> Dict[str, Any]:
         result = {"action": "DATA_FORTRESS", "status": "success", "message": "Encrypted sensitive data with new key and moved to randomized hidden path."}
         try:
-            vault_dir = f"/app/applet/aegix/vault/{incident_id}_scorch"
+            vault_dir = f"/app/applet/nova/vault/{incident_id}_scorch"
             os.makedirs(vault_dir, exist_ok=True)
             
             # Write a secure vault lock file simulating the encryption

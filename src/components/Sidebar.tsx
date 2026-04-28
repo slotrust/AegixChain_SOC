@@ -1,7 +1,7 @@
 import React from 'react';
 import { LayoutDashboard, Bell, List, MessageSquare, ShieldCheck, Globe, Cpu, SearchCode, Users, Brain, ShieldBan, Network } from 'lucide-react';
 import { motion } from 'motion/react';
-import AegixLogo from './AegixLogo';
+import NovaLogo from './NovaLogo';
 
 interface SidebarProps {
   activeTab: string;
@@ -13,7 +13,7 @@ interface SidebarProps {
 export default function Sidebar({ activeTab, setActiveTab, alertCount, userRole }: SidebarProps) {
   const menuItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { id: 'aegix', label: 'Aegix Brain', icon: Brain },
+    { id: 'nova', label: 'Nova Brain', icon: Brain },
     { id: 'edr', label: 'Endpoint EDR', icon: ShieldBan },
     { id: 'processes', label: 'Processes', icon: Cpu },
     { id: 'network', label: 'Network', icon: Globe },
@@ -31,9 +31,9 @@ export default function Sidebar({ activeTab, setActiveTab, alertCount, userRole 
   return (
     <div className="w-64 h-screen fixed left-0 top-0 glass-panel border-r border-soc-border/50 flex flex-col z-50">
       <div className="p-6 flex items-center gap-3 border-b border-soc-border/30">
-        <AegixLogo className="w-10 h-10" />
+        <NovaLogo className="w-10 h-10" />
         <h1 className="text-xl font-syne font-bold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-soc-cyan to-soc-purple">
-          AegixChain
+          NovaShield
         </h1>
       </div>
 

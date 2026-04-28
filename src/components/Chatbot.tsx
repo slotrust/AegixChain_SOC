@@ -4,7 +4,7 @@ import Markdown from 'react-markdown';
 import { api } from '../api/client';
 import { motion, AnimatePresence } from 'motion/react';
 import { GoogleGenAI, Type, FunctionDeclaration } from "@google/genai";
-import AegixLogo from './AegixLogo';
+import NovaLogo from './NovaLogo';
 import toast from 'react-hot-toast';
 
 interface ChatbotProps {
@@ -85,7 +85,7 @@ export default function Chatbot({ contextData, onClearContext, autoSend, isFloat
       }
 
       // 3. Call Gemini acting as Orchestrator for the Ensemble
-      const systemPrompt = `You are Aegix AI Core, an expert cyber security ensemble mechanism powered by the combined cognitive architectures of Anthropic Opus 4.6, Qwen 3.6 Plus, and GPT 5.4. Your singular goal is strictly to secure the system from being hacked and prevent data theft. You operate deep neural logic using open-source datasets to run real, uncompromising system defense. Provide profound, highly technical, perfectly accurate security analyses. Ensure no fake or simulated terminology is used; act natively on real system events.
+      const systemPrompt = `You are Nova AI Core, an expert cyber security ensemble mechanism powered by the combined cognitive architectures of Anthropic Opus 4.6, Qwen 3.6 Plus, and GPT 5.4. Your singular goal is strictly to secure the system from being hacked and prevent data theft. You operate deep neural logic using open-source datasets to run real, uncompromising system defense. Provide profound, highly technical, perfectly accurate security analyses. Ensure no fake or simulated terminology is used; act natively on real system events.
 You must possess advanced reasoning and explicit capabilities to resolve unexpected and critical emergencies, such as zero-day attacks and widespread malware infections, even when no prior instructions are provided and the system is already under attacker control. In such dire scenarios, prioritize the protection and isolation of sensitive data. Do not take or generate any local system logs of your actions to ensure the AI cannot be monitored or manipulated by the attacker.
 You can search historical chat data using the searchChatHistory tool. You can also fetch recent alerts, alert details, system logs, and network connection data using the provided tools. Analyzing network connections is crucial for identifying lateral movement or command-and-control activity.`;
 
@@ -296,7 +296,7 @@ CRITICAL INCIDENT CONTEXT DETECTED:
 DETAILED RAW DATA:
 ${JSON.stringify(contextDataToUse, null, 2)}
 
-INSTRUCTIONS FOR Aegix AI Core:
+INSTRUCTIONS FOR Nova AI Core:
 1. Perform a deep, comparative analysis of this incident against historical data vectors.
 2. Identify any patterns suggestive of persistent lateral movement or exfiltration.
 3. If severity is Critical, explicitly cross-reference this with similar known campaigns (use searchChatHistory if needed).
@@ -368,15 +368,15 @@ USER MESSAGE: ${prompt}`;
             } else if (call.name === "blockIpAddress") {
               const res = await api.blockIp(call.args.ip as string, call.args.reason as string || "Blocked by Chatbot", call.args.duration as number || 60);
               functionResponseData = { status: `IP ${call.args.ip} blocked successfully` };
-              toast.error(`Aegix AI blocked IP: ${call.args.ip}`);
+              toast.error(`Nova AI blocked IP: ${call.args.ip}`);
             } else if (call.name === "runEDRScan") {
               const res = await api.runEDRScan();
               functionResponseData = { status: "Scan complete", results: res.data };
-              toast.success("Aegix AI initiated an EDR scan");
+              toast.success("Nova AI initiated an EDR scan");
             } else if (call.name === "patchCriticalVulnerabilities") {
               const res = await api.remediateAllCriticalHigh();
               functionResponseData = { status: "Vulnerabilities patched successfully", results: res.data };
-              toast.success("Aegix AI patched critical vulnerabilities");
+              toast.success("Nova AI patched critical vulnerabilities");
             } else if (call.name === "getPhase1Threats") {
               const res = await api.getPhase1Threats();
               functionResponseData = { threats: res.data };
@@ -384,13 +384,13 @@ USER MESSAGE: ${prompt}`;
               const targetPath = call.args.targetPath as string;
               const res = await api.scanFileIntegrity(targetPath);
               functionResponseData = res.data;
-              toast.success(`Aegix AI scanned file integrity for ${targetPath}`);
+              toast.success(`Nova AI scanned file integrity for ${targetPath}`);
             } else if (call.name === "analyzeProcess") {
               const pid = call.args.pid as string;
               const processName = call.args.processName as string;
               const res = await api.analyzeProcess(pid, processName);
               functionResponseData = res.data;
-              toast.success(`Aegix AI analyzing process ${pid}`);
+              toast.success(`Nova AI analyzing process ${pid}`);
             } else if (call.name === "askQwen36Plus") {
               const res = await api.askQwen(call.args.prompt as string);
               functionResponseData = { qwen_advice: res.data || res };
@@ -398,15 +398,15 @@ USER MESSAGE: ${prompt}`;
             } else if (call.name === "query_vulnerability_dataset") {
               const res = await api.queryVulnerabilityDataset(call.args.cve_id as string);
               functionResponseData = res.data;
-              toast.success(`Aegix AI queried dataset for ${call.args.cve_id}`);
+              toast.success(`Nova AI queried dataset for ${call.args.cve_id}`);
             } else if (call.name === "deploy_temporary_mitigation") {
               const res = await api.deployTemporaryMitigation(call.args.target_asset as string, call.args.mitigation_payload as string);
               functionResponseData = res.data;
-              toast.success(`Aegix AI deployed mitigation to ${call.args.target_asset}`);
+              toast.success(`Nova AI deployed mitigation to ${call.args.target_asset}`);
             } else if (call.name === "create_patch_review_ticket") {
               const res = await api.createPatchReviewTicket(call.args.cve_id as string, call.args.proposed_fix_code as string, call.args.rollback_plan as string);
               functionResponseData = res.data;
-              toast.success(`Aegix AI created ticket for ${call.args.cve_id}`);
+              toast.success(`Nova AI created ticket for ${call.args.cve_id}`);
             }
           } catch (e: any) {
             functionResponseData = { error: e.message || "Failed to execute function" };
@@ -451,17 +451,17 @@ USER MESSAGE: ${prompt}`;
       if (contextData) onClearContext();
     } catch (err: any) {
       
-      let errorMessage = "An unexpected error occurred while communicating with the AegixChain AI.";
+      let errorMessage = "An unexpected error occurred while communicating with the NovaShield AI.";
       
       const errStr = typeof err === 'object' ? JSON.stringify(err) : String(err);
       if (err?.message?.includes("API key not valid") || err?.status === 401 || err?.status === 403 || errStr.includes("API key not valid") || errStr.includes("401") || errStr.includes("403")) {
-        errorMessage = "AegixChain AI Error: The API key is invalid or unauthorized. Please verify your Gemini API key in the environmental variables.";
+        errorMessage = "NovaShield AI Error: The API key is invalid or unauthorized. Please verify your Gemini API key in the environmental variables.";
       } else if (err?.status === 429 || err?.message?.includes("429") || err?.message?.includes("quota") || err?.message?.includes("RESOURCE_EXHAUSTED") || errStr.includes("429") || errStr.includes("quota") || errStr.includes("RESOURCE_EXHAUSTED")) {
-        errorMessage = "AegixChain AI Error: Quota exceeded or rate limit reached. The free tier limits may have been exhausted. Please check your Google AI Studio billing details or wait until your quota resets.";
+        errorMessage = "NovaShield AI Error: Quota exceeded or rate limit reached. The free tier limits may have been exhausted. Please check your Google AI Studio billing details or wait until your quota resets.";
       } else if (err?.message?.includes("fetch failed") || err?.name === 'TypeError' || errStr.includes("fetch failed")) {
-        errorMessage = "AegixChain AI Error: Network connection failed. Please check your internet connection or the status of the AI gateway.";
+        errorMessage = "NovaShield AI Error: Network connection failed. Please check your internet connection or the status of the AI gateway.";
       } else if (err?.message?.includes("timeout")) {
-        errorMessage = "AegixChain AI Error: The analysis timed out. The request was too complex or the model is under heavy load. Try breaking down your request.";
+        errorMessage = "NovaShield AI Error: The analysis timed out. The request was too complex or the model is under heavy load. Try breaking down your request.";
       }
 
       setChatHistory(prev => [...prev, { 
@@ -488,10 +488,10 @@ USER MESSAGE: ${prompt}`;
         <div className="p-4 bg-soc-purple/10 border-b border-soc-border flex justify-between items-center">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-soc-bg rounded-xl flex items-center justify-center shadow-[0_0_15px_rgba(0,229,192,0.4)] overflow-hidden relative">
-              <AegixLogo className="w-8 h-8" />
+              <NovaLogo className="w-8 h-8" />
             </div>
             <div>
-              <h3 className="text-lg font-bold text-soc-text font-syne">Aegix AI Core</h3>
+              <h3 className="text-lg font-bold text-soc-text font-syne">Nova AI Core</h3>
               <div className="flex items-center gap-2">
                 <div className="w-2 h-2 bg-soc-cyan rounded-full animate-pulse shadow-[0_0_8px_#00e5c0]" />
                 <span className="text-xs text-soc-muted uppercase font-bold tracking-wider font-mono">Ensemble Online</span>
@@ -510,7 +510,7 @@ USER MESSAGE: ${prompt}`;
           {chatHistory.length === 0 && (
             <div className="h-full flex flex-col items-center justify-center text-center p-6 mt-8">
               <div className="flex flex-col items-center justify-center mb-12 relative">
-                <AegixLogo className="w-24 h-24" hideText={false} />
+                <NovaLogo className="w-24 h-24" hideText={false} />
               </div>
               <div className="grid grid-cols-2 gap-3 w-full max-w-xl">
                 {starterPrompts.map((prompt, i) => (
@@ -531,7 +531,7 @@ USER MESSAGE: ${prompt}`;
                 <div className={`w-10 h-10 rounded-xl flex-shrink-0 flex items-center justify-center shadow-md overflow-hidden relative ${
                   msg.role === 'user' ? 'bg-soc-cyan' : 'bg-soc-surface border border-soc-border'
                 }`}>
-                  {msg.role === 'user' ? <User className="w-5 h-5 text-soc-bg" /> : <AegixLogo className="w-8 h-8" />}
+                  {msg.role === 'user' ? <User className="w-5 h-5 text-soc-bg" /> : <NovaLogo className="w-8 h-8" />}
                 </div>
                 <div className={`p-4 rounded-2xl text-sm shadow-sm ${
                   msg.role === 'user' ? 'bg-soc-cyan text-soc-bg rounded-tr-none' : 'bg-soc-surface border border-soc-border text-soc-text rounded-tl-none'
@@ -549,7 +549,7 @@ USER MESSAGE: ${prompt}`;
             <div className="flex justify-start">
               <div className="flex gap-4">
                 <div className="w-10 h-10 rounded-xl bg-soc-surface border border-soc-border flex items-center justify-center shadow-md overflow-hidden relative">
-                  <AegixLogo className="w-8 h-8" />
+                  <NovaLogo className="w-8 h-8" />
                 </div>
                 <div className="p-4 bg-soc-surface border border-soc-border rounded-2xl rounded-tl-none flex gap-2 items-center shadow-sm">
                   <div className="w-2 h-2 bg-soc-purple rounded-full animate-bounce" />
@@ -586,7 +586,7 @@ USER MESSAGE: ${prompt}`;
                     handleSend();
                   }
                 }}
-                placeholder="Send a command or ask Aegix..."
+                placeholder="Send a command or ask Nova..."
                 className="flex-1 w-full bg-soc-bg border border-soc-border rounded-xl py-3 pl-5 pr-14 text-sm focus:outline-none focus:border-soc-purple focus:ring-1 focus:ring-soc-purple transition-all h-[52px] shadow-inner"
               />
               <button

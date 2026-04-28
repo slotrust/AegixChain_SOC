@@ -5,7 +5,7 @@ import { featureExtractor } from "../../ai/feature_extractor.js";
 import { anomalyDetector } from "../../ai/anomaly_detector.js";
 import { explainer } from "../../ai/explainer.js";
 import { processCache, networkCache } from "./real_system_monitor.js";
-import { aegixBridge } from "./aegix_bridge.js";
+import { novaBridge } from "./nova_bridge.js";
 
 export const logService = {
   processAndSaveLog: async (logData: any) => {
@@ -26,9 +26,9 @@ export const logService = {
       is_anomaly: isAnomaly
     });
     
-    // 4. Send raw event to the real Aegix Brain Python Agent to orchestrate assessing and actioning
+    // 4. Send raw event to the real Nova Brain Python Agent to orchestrate assessing and actioning
     try {
-       aegixBridge.processEvent({
+       novaBridge.processEvent({
           id: logId,
           event_type: logData.event_type || 'system_log',
           source_ip: logData.source_ip,
@@ -39,7 +39,7 @@ export const logService = {
           severity: score > criticalThreshold ? 'Critical' : (isAnomaly ? 'High' : 'Low')
        });
     } catch (e) {
-       console.error("Failed to forward log to Aegix Brain:", e);
+       console.error("Failed to forward log to Nova Brain:", e);
     }
     
     let alertId = null;
@@ -54,14 +54,14 @@ export const logService = {
       else if (score > (anomalyThreshold + (criticalThreshold - anomalyThreshold) * 0.2)) severity = "Medium";
       
       // We no longer automatically trigger IPS blocks for EVERY anomaly directly in logService.
-      // We pass the decision to Aegix Brain to execute! We just log the base Alert here.
+      // We pass the decision to Nova Brain to execute! We just log the base Alert here.
       alertId = alertService.createAlert({
         log_id: logId,
         severity,
         reason,
         score,
-        mitigations: "Evaluating optimal response strategy via Aegix AI Brain..."
-      }, true); // skipAegix: true to prevent duplicate evaluation since log was sent directly
+        mitigations: "Evaluating optimal response strategy via Nova AI Brain..."
+      }, true); // skipNova: true to prevent duplicate evaluation since log was sent directly
     }
     
     return { log_id: logId, is_anomaly: isAnomaly, alert_id: alertId };

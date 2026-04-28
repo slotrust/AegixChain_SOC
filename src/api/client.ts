@@ -97,12 +97,12 @@ export const api = {
   remediateAllCriticalHigh: () => client.post('/edr/remediate-critical', {}, { timeout: 300000 }),
   getEDRReports: () => client.get('/edr/reports'),
 
-  // Aegix AI Brain
-  getAegixHistory: () => client.get('/sentinel/history'),
-  sendAegixCommand: (action: string) => client.post('/sentinel/command', { action }).then(res => res.data),
+  // Nova AI Brain
+  getNovaHistory: () => client.get('/sentinel/history'),
+  sendNovaCommand: (action: string) => client.post('/sentinel/command', { action }).then(res => res.data),
 
-  // Aegix Qwen Intel
-  askQwen: (prompt: string) => client.post('/aegix/qwen-advice', { prompt }).then(res => res.data),
+  // Nova Qwen Intel
+  askQwen: (prompt: string) => client.post('/nova/qwen-advice', { prompt }).then(res => res.data),
 
   // Behavioral AI Endpoints
   getBehavioralAnomalies: () => client.get('/behavioral/anomalies'),

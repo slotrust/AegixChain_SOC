@@ -118,7 +118,7 @@ export default function Dashboard({ onSelectLog, onInvestigate }: DashboardProps
           </div>
           <h3 className="text-soc-purple font-bold font-syne text-lg mb-2">System Intelligence</h3>
           <p className="text-soc-text text-sm leading-relaxed relative z-10">
-            AegixChain utilizes <span className="text-soc-purple font-bold">Episodic Threat Memory</span> and an <span className="text-soc-cyan font-bold">Online Deep Learning Network</span> to embed attack fingerprints and predict future threats. Powered by a local <span className="text-soc-purple font-bold">SmolLM-135M</span> model for autonomous reasoning.
+            NovaShield utilizes <span className="text-soc-purple font-bold">Episodic Threat Memory</span> and an <span className="text-soc-cyan font-bold">Online Deep Learning Network</span> to embed attack fingerprints and predict future threats. Powered by a local <span className="text-soc-purple font-bold">SmolLM-135M</span> model for autonomous reasoning.
             <br /><br />
             <span className="italic text-soc-muted">"The system gets smarter every time it's attacked."</span>
           </p>
