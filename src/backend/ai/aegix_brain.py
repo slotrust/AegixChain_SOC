@@ -76,8 +76,8 @@ class OpenRouterQwenLLM:
         headers = {
             "Authorization": f"Bearer {self.api_key}",
             "Content-Type": "application/json",
-            "HTTP-Referer": "https://nova.example.com",
-            "X-Title": "Nova AI Core"
+            "HTTP-Referer": "https://aegix.example.com",
+            "X-Title": "Aegix AI Core"
         }
         
         messages = []
@@ -116,7 +116,7 @@ class GeminiLLM:
             if api_key and api_key != "MY_GEMINI_API_KEY" and not api_key.startswith("YOUR_"):
                 try:
                     self.client = genai.Client(api_key=api_key)
-                    print(json.dumps({"status": "ready", "message": f"Gemini API ({self.model_name}) initialized. Nova AI Core successfully established local AI presence."}), flush=True)
+                    print(json.dumps({"status": "ready", "message": f"Gemini API ({self.model_name}) initialized. Aegix AI Core successfully established local AI presence."}), flush=True)
                 except Exception as e:
                     print(json.dumps({"error": f"Failed to setup Gemini API: {e}"}), flush=True)
                     self.enabled = False
@@ -159,7 +159,7 @@ class LocalTransformersLLM:
                 device="cpu",
                 torch_dtype=torch.float32
             )
-            print(json.dumps({"status": "ready", "message": f"Local LLM {self.model_name} loaded successfully. Nova AI Core successfully established local AI presence."}), flush=True)
+            print(json.dumps({"status": "ready", "message": f"Local LLM {self.model_name} loaded successfully. Aegix AI Core successfully established local AI presence."}), flush=True)
         except Exception as e:
             print(json.dumps({"error": f"Failed to load local LLM: {e}"}), flush=True)
             self.generator = None
@@ -415,8 +415,8 @@ class LayerHardener:
 
         sigma_template = f"""title: {rule_name.replace('_', ' ')}
 status: experimental
-description: Auto-generated rule autonomously created by Nova Brain after detection misses or critical threat identified.
-author: Nova AI
+description: Auto-generated rule autonomously created by Aegix Brain after detection misses or critical threat identified.
+author: Aegix AI
 date: {time.strftime("%Y/%m/%d")}
 logsource:
     category: application
@@ -523,7 +523,7 @@ class AttackMemory:
     def get_response_playbook(self, incident_id: str) -> str:
         return f"Auto-response playbook for {incident_id}: Block IP at firewall, Isolate Host, Clear Temp Files."
 
-class NovaState(dict):
+class AegixState(dict):
     pass
 
 class AttackerProfiler:
@@ -590,7 +590,7 @@ class CampaignNamer:
 
         return {
             "name": "Operation VoidWalker",
-            "backstory": "Nova Ensemble detected a pattern but failed to generate a creative name. Defaulting to VoidWalker protocol for high-fidelity tracking."
+            "backstory": "Aegix Ensemble detected a pattern but failed to generate a creative name. Defaulting to VoidWalker protocol for high-fidelity tracking."
         }
 
 class MalwareAnalyzer:
@@ -646,7 +646,7 @@ class MalwareAnalyzer:
             "detected_indicators": detected_apis
         }
 
-class NovaAgent:
+class AegixAgent:
     def __init__(self):
         self.memory = AttackMemory()
         self.deep_learner = DeepLearningMemory()
@@ -686,7 +686,7 @@ class NovaAgent:
             self.graph = None
 
     def _build_graph(self):
-        workflow = StateGraph(NovaState)
+        workflow = StateGraph(AegixState)
         
         workflow.add_node("analyze", self.analyze)
         workflow.add_node("memory_lookup", self.memory_lookup)
@@ -703,7 +703,7 @@ class NovaAgent:
         
         return workflow.compile()
 
-    def analyze(self, state: NovaState):
+    def analyze(self, state: AegixState):
         event = state.get("event", {})
         
         # Threat Intel Lookup
@@ -821,7 +821,7 @@ class NovaAgent:
                 
         return state
 
-    def memory_lookup(self, state: NovaState):
+    def memory_lookup(self, state: AegixState):
         event = state.get("event", {})
         # Self-hardening: threshold auto-adjusts based on memory size
         current_threshold = max(0.60, self.base_threshold - (len(self.memory.memory) * 0.01))
@@ -838,7 +838,7 @@ class NovaAgent:
             state["similarity_score"] = 0.0
         return state
 
-    def decide_action(self, state: NovaState):
+    def decide_action(self, state: AegixState):
         event = state.get("event", {})
         dl_threat_score = state.get("dl_threat_score", 0.0)
         malware_analysis = state.get("malware_analysis", {})
@@ -863,7 +863,7 @@ class NovaAgent:
                 })
                 
                 prompt_path = os.path.join(os.path.dirname(__file__), "AEGIX_PROMPT.md")
-                system_instruction = "You are Nova AI Core. Analyze events and return valid JSON with keys 'action' and 'reasoning'."
+                system_instruction = "You are Aegix AI Core. Analyze events and return valid JSON with keys 'action' and 'reasoning'."
                 if os.path.exists(prompt_path):
                     with open(prompt_path, "r") as f:
                         system_instruction = f.read()
@@ -893,9 +893,9 @@ class NovaAgent:
                     try:
                         decision = json.loads(final_analysis_text)
                         
-                        # Handle recursive Nova structures
-                        if "nova_response" in decision:
-                            decision = decision["nova_response"].get("decision", {}).get("response_actions", [{}])[0]
+                        # Handle recursive Aegix structures
+                        if "aegix_response" in decision:
+                            decision = decision["aegix_response"].get("decision", {}).get("response_actions", [{}])[0]
                         
                         state["action"] = decision.get("action", "IGNORE")
                         state["reasoning"] = decision.get("reasoning", "Autonomous decision.")
@@ -921,14 +921,14 @@ class NovaAgent:
                             state["reasoning"] = f"Cloud agents offline. Local sentinel decision: {res}"
                         except:
                             state["action"] = "MANUAL_REVIEW"
-                            state["reasoning"] = "Nova Multi-Agent Layer failed. Escalating."
+                            state["reasoning"] = "Aegix Multi-Agent Layer failed. Escalating."
                     else:
                         state["action"] = "MANUAL_REVIEW"
-                        state["reasoning"] = "Nova Multi-Agent Layer failed. No local fallback available."
+                        state["reasoning"] = "Aegix Multi-Agent Layer failed. No local fallback available."
             
         return state
 
-    def execute(self, state: NovaState):
+    def execute(self, state: AegixState):
         action = state.get("action")
         event = state.get("event", {})
         
@@ -966,7 +966,7 @@ class NovaAgent:
             if action == "DATA_FORTRESS":
                 res = self.response_engine.execute_data_fortress(str(event.get('id', 'unknown_incident')))
             elif action == "FORENSIC_PRESERVATION":
-                evidence_path = f"/app/applet/nova/forensics/{event.get('id', 'unknown')}"
+                evidence_path = f"/app/applet/aegix/forensics/{event.get('id', 'unknown')}"
                 if not os.path.exists(evidence_path):
                     os.makedirs(evidence_path, exist_ok=True)
                 with open(os.path.join(evidence_path, "memory_dump.bin"), "w") as f:
@@ -990,7 +990,7 @@ class NovaAgent:
                 execution_details.append(res)
                 
             if "forensic" in text_to_parse or "preserve" in text_to_parse:
-                evidence_path = f"/app/applet/nova/forensics/{event.get('id', 'unknown')}"
+                evidence_path = f"/app/applet/aegix/forensics/{event.get('id', 'unknown')}"
                 if not os.path.exists(evidence_path):
                     os.makedirs(evidence_path, exist_ok=True)
                 with open(os.path.join(evidence_path, "memory_dump.bin"), "w") as f:
@@ -1073,7 +1073,7 @@ Reasoning: {state.get('reasoning', state.get('playbook', ''))}
             
         return state
 
-    def store_memory(self, state: NovaState):
+    def store_memory(self, state: AegixState):
         event = state.get("event", {})
         incident_id = self.memory.add_incident(event)
         
@@ -1099,7 +1099,7 @@ Reasoning: {state.get('reasoning', state.get('playbook', ''))}
             return self._fallback_process(event)
             
     def _fallback_process(self, event: Dict[str, Any]):
-        state = NovaState({"event": event})
+        state = AegixState({"event": event})
         state = self.analyze(state)
         state = self.memory_lookup(state)
         state = self.decide_action(state)
@@ -1109,7 +1109,7 @@ Reasoning: {state.get('reasoning', state.get('playbook', ''))}
 
 if __name__ == "__main__":
     print(json.dumps({"status": "ready", "message": "AEGIX AI Brain initialized."}), flush=True)
-    agent = NovaAgent()
+    agent = AegixAgent()
     
     for line in sys.stdin:
         line = line.strip()
@@ -1163,7 +1163,7 @@ if __name__ == "__main__":
                     print(json.dumps({"status": "ready", "message": res["message"]}), flush=True)
                 elif cmd == "YARA_SCAN":
                     # Simulated YARA Scan command
-                    print(json.dumps({"type": "nova_result", "data": {
+                    print(json.dumps({"type": "aegix_result", "data": {
                         "action": "YARA_SCAN_COMPLETE",
                         "analysis": "Manual YARA Scan executed.",
                         "reasoning": "User requested YARA scan via Forensics Panel.",
@@ -1174,6 +1174,6 @@ if __name__ == "__main__":
                 continue
                 
             result = agent.process_event(event)
-            print(json.dumps({"type": "nova_result", "data": result}), flush=True)
+            print(json.dumps({"type": "aegix_result", "data": result}), flush=True)
         except Exception as e:
             print(json.dumps({"type": "error", "message": str(e)}), flush=True)

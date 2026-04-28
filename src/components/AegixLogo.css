@@ -1,4 +1,4 @@
-.nova-wrap {
+.aegix-wrap {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -7,7 +7,7 @@
 }
 
 /* ── Glow orb ── */
-.nova-glow-orb {
+.aegix-glow-orb {
   position: absolute;
   width: 150%; height: 150%; border-radius: 50%;
   background: radial-gradient(circle, rgba(0,229,192,0.11) 0%, transparent 65%);
@@ -22,8 +22,8 @@
 }
 
 /* ── SVG mark ── */
-.nova-mark { position: relative; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; }
-.nova-mark svg { width: 100%; height: 100%; max-width: 100%; max-height: 100%; overflow: visible; }
+.aegix-mark { position: relative; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; }
+.aegix-mark svg { width: 100%; height: 100%; max-width: 100%; max-height: 100%; overflow: visible; }
 
 /* ── Spinning rings ── */
 @keyframes spin-cw  { to { transform: rotate( 360deg); } }

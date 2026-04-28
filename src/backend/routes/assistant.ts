@@ -49,7 +49,7 @@ ${JSON.stringify(mitreTimeline, null, 2)}
     }
     const ai = new GoogleGenAI({ apiKey });
 
-    const systemPrompt = `You are the Nova AI Assistant, an expert SOC analyst providing conversational support to human security operators.
+    const systemPrompt = `You are the Aegix AI Assistant, an expert SOC analyst providing conversational support to human security operators.
 You have access to the current system state, threat memory, and MITRE ATT&CK mappings.
 
 Guidelines:
@@ -73,7 +73,7 @@ ${contextStr}
 
     // Replay history for the chat session context (if using chats.create, we can optionally pass history or let it be stateless if we just pass everything as prompt)
     // Since we're keeping it simple, let's just make a single generateContent call with history appended
-    let fullPrompt = history.map(h => `${h.role === 'user' ? 'User' : 'Nova'}: ${h.text}`).join('\n') + `\nUser: ${query}`;
+    let fullPrompt = history.map(h => `${h.role === 'user' ? 'User' : 'Aegix'}: ${h.text}`).join('\n') + `\nUser: ${query}`;
     
     const response = await ai.models.generateContent({
       model: 'gemini-2.5-pro',

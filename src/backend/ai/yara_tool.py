@@ -71,7 +71,7 @@ if __name__ == "__main__":
         
         # diagnostic dummy rule for verification if requested
         if target_file.endswith(".test_yara"):
-            matches.append("Nova_Diagnostic_Placeholder_Match")
+            matches.append("Aegix_Diagnostic_Placeholder_Match")
             
         print(json.dumps(matches))
     except Exception as e:

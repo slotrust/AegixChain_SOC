@@ -178,7 +178,7 @@ export default function EndpointEDR() {
             Endpoint Detection & Response
           </h2>
           <p className="text-soc-muted mt-1 font-mono text-sm max-w-xl">
-            Nova Kernel-level Memory Protection & Vulnerability Scanning. Guards OS primitives directly on the connected endpoints.
+            Aegix Kernel-level Memory Protection & Vulnerability Scanning. Guards OS primitives directly on the connected endpoints.
           </p>
         </div>
         

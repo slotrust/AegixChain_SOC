@@ -13,7 +13,7 @@ import usersRoutes from "./src/backend/routes/users.js";
 import ipsRoutes from "./src/backend/routes/ips.js";
 import phase1Routes from "./src/backend/routes/phase1.js";
 import edrRoutes from "./src/backend/routes/edr.js";
-import novaRoutes from "./src/backend/routes/nova.js";
+import aegixRoutes from "./src/backend/routes/aegix.js";
 import behavioralRoutes from "./src/backend/routes/behavioral.js";
 import multiAgentRoutes from "./src/backend/routes/multi_agent.js";
 import memoryRoutes from "./src/backend/routes/memory.js";
@@ -28,7 +28,7 @@ import { logService } from "./src/backend/services/log_service.js";
 import { alertService } from "./src/backend/services/alert_service.js";
 import { realSystemMonitor } from "./src/backend/services/real_system_monitor.js";
 import { sensorBridge } from "./src/backend/services/sensor_bridge.js";
-import { novaBridge } from "./src/backend/services/nova_bridge.js";
+import { aegixBridge } from "./src/backend/services/aegix_bridge.js";
 import { sseService } from "./src/backend/services/sse_service.js";
 
 // Directories handled via process.cwd()
@@ -107,7 +107,7 @@ async function startServer() {
   app.use("/api/ips", ipsRoutes);
   app.use("/api/phase1", phase1Routes);
   app.use("/api/edr", edrRoutes);
-  app.use("/api/nova", novaRoutes);
+  app.use("/api/aegix", aegixRoutes);
   app.use("/api/behavioral", behavioralRoutes);
   app.use("/api/multi-agent", multiAgentRoutes);
   app.use("/api/memory", memoryRoutes);
@@ -116,7 +116,7 @@ async function startServer() {
   app.use("/api/correlation", correlationRoutes);
 
   app.get("/api/sentinel/history", (req, res) => {
-    res.json(novaBridge.getHistory());
+    res.json(aegixBridge.getHistory());
   });
 
   app.post("/api/sentinel/command", (req, res) => {
@@ -126,19 +126,19 @@ async function startServer() {
     }
     
     // Check if Python process is ready
-    if (!novaBridge.isReady) {
-      return res.status(500).json({ error: "Nova Brain is not ready" });
+    if (!aegixBridge.isReady) {
+      return res.status(500).json({ error: "Aegix Brain is not ready" });
     }
     
     // Inject the command as a special event
-    novaBridge.processEvent({
+    aegixBridge.processEvent({
       event_type: "SYSTEM_COMMAND",
       command: action,
       source_ip: "127.0.0.1",
       timestamp: new Date().toISOString()
     });
     
-    res.json({ status: "ok", message: `Command '${action}' sent to Nova Brain` });
+    res.json({ status: "ok", message: `Command '${action}' sent to Aegix Brain` });
   });
 
   app.get("/api/health", (req, res) => {
@@ -182,8 +182,8 @@ async function startServer() {
     // Start Python Sensor Daemon bridge
     sensorBridge.start();
     
-    // Start Nova AI Brain bridge
-    novaBridge.start();
+    // Start Aegix AI Brain bridge
+    aegixBridge.start();
 
     // Start background jobs interval (every minute)
     setInterval(() => {

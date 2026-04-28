@@ -168,7 +168,7 @@ export default function ThreatMemory() {
                <div className="p-4 border-b border-soc-border flex justify-between items-center bg-soc-purple/10">
                  <h3 className="font-syne font-bold text-soc-purple flex items-center gap-2">
                    <Database className="w-5 h-5" />
-                   Nova AI Memory Analysis
+                   Aegix AI Memory Analysis
                  </h3>
                  <button onClick={() => setSelectedThreat(null)} className="p-1 text-soc-muted hover:text-white rounded-md hover:bg-white/10 transition-colors">
                    <X className="w-5 h-5" />
@@ -188,7 +188,7 @@ export default function ThreatMemory() {
                     {isGenerating ? (
                       <div className="flex items-center gap-3 text-soc-muted text-sm py-4">
                         <RefreshCw className="w-4 h-4 animate-spin text-soc-purple" />
-                        Nova AI is generating memory context...
+                        Aegix AI is generating memory context...
                       </div>
                     ) : (
                       <div className="prose prose-invert prose-sm max-w-none prose-p:leading-relaxed text-soc-text">

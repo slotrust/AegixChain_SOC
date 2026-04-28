@@ -10,8 +10,8 @@ import ThreatMemory from './ThreatMemory';
 import MitreAttackChain from './MitreAttackChain';
 import CrossLayerCorrelation from './CrossLayerCorrelation';
 
-export default function NovaBrain() {
-  const { data: history } = usePolling(() => api.getNovaHistory(), 2000);
+export default function AegixBrain() {
+  const { data: history } = usePolling(() => api.getAegixHistory(), 2000);
   const [selectedReport, setSelectedReport] = React.useState<string | null>(null);
   const [isHackerMode, setIsHackerMode] = React.useState(false);
   const [isVoiceEnabled, setIsVoiceEnabled] = React.useState(false);
@@ -19,7 +19,7 @@ export default function NovaBrain() {
   
   const events = Array.isArray(history) ? history : [];
 
-  // Nova Voice: TTS for critical alerts
+  // Aegix Voice: TTS for critical alerts
   useEffect(() => {
     if (!isVoiceEnabled || events.length === 0) return;
     const latest = events[0];
@@ -46,7 +46,7 @@ export default function NovaBrain() {
           <button 
             onClick={() => setIsVoiceEnabled(!isVoiceEnabled)}
             className={`p-2 rounded-lg border transition-all ${isVoiceEnabled ? 'bg-soc-purple/20 border-soc-purple text-soc-purple' : 'bg-soc-bg border-soc-border text-soc-muted'}`}
-            title="Toggle Nova Voice"
+            title="Toggle Aegix Voice"
           >
             {isVoiceEnabled ? <Volume2 className="w-5 h-5" /> : <VolumeX className="w-5 h-5" />}
           </button>

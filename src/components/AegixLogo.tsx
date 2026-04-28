@@ -1,11 +1,11 @@
 import React from 'react';
-import './NovaLogo.css';
+import './AegixLogo.css';
 
-export default function NovaLogo({ className = "w-10 h-10", hideText = true }: { className?: string, hideText?: boolean }) {
+export default function AegixLogo({ className = "w-10 h-10", hideText = true }: { className?: string, hideText?: boolean }) {
   return (
-    <div className={`nova-wrap ${className}`}>
-      <div className="nova-mark relative w-full h-full">
-        <div className="nova-glow-orb"></div>
+    <div className={`aegix-wrap ${className}`}>
+      <div className="aegix-mark relative w-full h-full">
+        <div className="aegix-glow-orb"></div>
         <svg viewBox="0 0 280 280" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
           <defs>
             <radialGradient id="cg" cx="50%" cy="50%" r="50%">
@@ -99,7 +99,7 @@ export default function NovaLogo({ className = "w-10 h-10", hideText = true }: {
 
           <div className="wordmark">
             <div className="wm-name">
-              Nova<span className="cyan">Chain</span><span className="ai">AI</span>
+              Aegix<span className="cyan">Chain</span><span className="ai">AI</span>
             </div>
             <div className="wm-tag">Blockchain Security Intelligence</div>
           </div>

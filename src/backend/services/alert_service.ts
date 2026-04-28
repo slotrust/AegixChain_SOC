@@ -1,5 +1,5 @@
 import { db } from "../database.js";
-import { novaBridge } from "./nova_bridge.js";
+import { aegixBridge } from "./aegix_bridge.js";
 import { sseService } from "./sse_service.js";
 
 export const settingsService = {
@@ -36,7 +36,7 @@ export const settingsService = {
 };
 
 export const alertService = {
-  createAlert: (alert: any, skipNova: boolean = false) => {
+  createAlert: (alert: any, skipAegix: boolean = false) => {
     // 1. Intelligent Severity Classification
     // Base severity comes from alert or defaults to Low.
     let calculatedSeverity = alert.severity || 'Low';
@@ -74,8 +74,8 @@ export const alertService = {
        const existingAlert = existing as {id: number, occurrences: number};
        db.prepare(`UPDATE alerts SET occurrences = occurrences + 1, created_at = datetime('now') WHERE id = ?`).run(existingAlert.id);
        
-       if (!skipNova && status === 'active') {
-         // Optionally inform Nova Brain of repeat
+       if (!skipAegix && status === 'active') {
+         // Optionally inform Aegix Brain of repeat
        }
        return existingAlert.id;
     }
@@ -95,10 +95,10 @@ export const alertService = {
       resolutionAction
     );
     
-    // Feed to Nova AI Brain only if not skipped and is active
-    if (!skipNova && status === 'active') {
+    // Feed to Aegix AI Brain only if not skipped and is active
+    if (!skipAegix && status === 'active') {
       try {
-        novaBridge.processEvent({
+        aegixBridge.processEvent({
           id: info.lastInsertRowid,
           event_type: 'alert',
           severity: calculatedSeverity,
@@ -107,7 +107,7 @@ export const alertService = {
           log_id: alert.log_id
         });
       } catch (e) {
-        console.error("Failed to send alert to Nova:", e);
+        console.error("Failed to send alert to Aegix:", e);
       }
     }
     

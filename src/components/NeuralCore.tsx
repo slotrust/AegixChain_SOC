@@ -84,7 +84,7 @@ export default function NeuralCore() {
           <div>
             <h3 className="text-xl font-bold font-syne text-soc-text flex items-center gap-2">
               <SparklesIcon className="w-6 h-6 text-soc-cyan" />
-              Nova AI Core <span className="text-[10px] bg-soc-cyan/20 text-soc-cyan px-2 py-0.5 rounded-full uppercase tracking-widest border border-soc-cyan/30">Active</span>
+              Aegix AI Core <span className="text-[10px] bg-soc-cyan/20 text-soc-cyan px-2 py-0.5 rounded-full uppercase tracking-widest border border-soc-cyan/30">Active</span>
             </h3>
             <p className="text-sm font-mono text-soc-muted mt-1">Autonomous Organising & Threat Analysis Neural Engine</p>
           </div>

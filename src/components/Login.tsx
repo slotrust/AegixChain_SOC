@@ -175,7 +175,7 @@ export default function Login({ onLoginSuccess }: LoginProps) {
         <div className="bg-soc-border w-full max-w-md p-10 rounded-lg border border-soc-cyan/20 relative shadow-[0_0_30px_rgba(0,229,192,0.1)]">
           
           <div className="flex flex-col items-center mb-8">
-            <h1 className="text-2xl font-bold font-syne text-white mb-6">NovaShield <span className="text-soc-cyan">Portal</span></h1>
+            <h1 className="text-2xl font-bold font-syne text-white mb-6">AegixChain <span className="text-soc-cyan">Portal</span></h1>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">

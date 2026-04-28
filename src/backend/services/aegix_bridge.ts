@@ -5,14 +5,14 @@ import { EventEmitter } from 'events';
 
 // handled
 
-class NovaBridge extends EventEmitter {
+class AegixBridge extends EventEmitter {
   private pythonProcess: ChildProcess | null = null;
   public isReady = false;
   private history: any[] = [];
 
   start() {
     
-    const scriptPath = path.join(process.cwd(), 'src/backend/ai/nova_brain.py');
+    const scriptPath = path.join(process.cwd(), 'src/backend/ai/aegix_brain.py');
     
     const spawnPython = (command: string) => {
       this.pythonProcess = spawn(command, [scriptPath], {
@@ -24,14 +24,14 @@ class NovaBridge extends EventEmitter {
       });
 
       this.pythonProcess.on('error', (err: any) => {
-        console.error("novaBridge Python Error:", err.message);
+        console.error("aegixBridge Python Error:", err.message);
         if (err.code === 'ENOENT' && command === 'python3') {
           spawnPython('python');
         }
       });
 
       this.pythonProcess.stdin?.on('error', (err) => {
-        console.error("novaBridge stdin error:", err);
+        console.error("aegixBridge stdin error:", err);
         this.isReady = false;
       });
 
@@ -49,7 +49,7 @@ class NovaBridge extends EventEmitter {
             const msg = JSON.parse(line);
             if (msg.status === 'ready') {
               this.isReady = true;
-            } else if (msg.type === 'sentinel_result' || msg.type === 'nova_result') {
+            } else if (msg.type === 'sentinel_result' || msg.type === 'aegix_result') {
               this.history.unshift({
                 timestamp: new Date().toISOString(),
                 ...msg.data
@@ -81,8 +81,8 @@ class NovaBridge extends EventEmitter {
               
               if (eventSeverity === 'Critical' && (action === "MANUAL_REVIEW" || action === "LLM_DECISION")) {
                   import('./alert_service.js').then(({ alertService }) => {
-                     // Fire automatic high severity alert since Nova Python identified it and requires manual review
-                     let reason = `[Nova Brain Critical] AI evaluated multi-layered threat path over threshold. ${msg.data.reasoning || ''}`;
+                     // Fire automatic high severity alert since Aegix Python identified it and requires manual review
+                     let reason = `[Aegix Brain Critical] AI evaluated multi-layered threat path over threshold. ${msg.data.reasoning || ''}`;
                      
                      if (tiResult?.malicious) {
                          reason = `[Threat Intel Hit] ${tiResult.source} flags IP as highly malicious. ${msg.data.reasoning || ''}`;
@@ -98,13 +98,13 @@ class NovaBridge extends EventEmitter {
                         reason: reason,
                         score: msg.data.dl_threat_score || 0.95,
                         mitigations: `Action needed, status: ${action}`
-                     }, true); // skipNova to prevent infinity loop
+                     }, true); // skipAegix to prevent infinity loop
                   }).catch(e => console.error("Failed to dynamically import alertService:", e));
               }
 
               if (action && action !== "MANUAL_REVIEW" && action !== "IGNORE" && action !== "LLM_DECISION") {
                 const sourceIp = msg.data.event?.source_ip;
-                const reasoning = msg.data.reasoning || "Autonomous Nova RL Response";
+                const reasoning = msg.data.reasoning || "Autonomous Aegix RL Response";
                 
                 // We no longer create alerts for DATA_FORTRESS, HONEYPOT, MULTI_AGENT_SPAWN
                 // because the user requested: "if the AI can resolve the problem, then there is no need for the alert,
@@ -190,4 +190,4 @@ class NovaBridge extends EventEmitter {
   }
 }
 
-export const novaBridge = new NovaBridge();
+export const aegixBridge = new AegixBridge();

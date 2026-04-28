@@ -12,7 +12,7 @@ interface Message {
   timestamp: Date;
 }
 
-export default function NovaAssistant() {
+export default function AegixAssistant() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -60,7 +60,7 @@ export default function NovaAssistant() {
       setMessages(prev => [...prev, assistantMsg]);
     } catch (error) {
       console.error(error);
-      toast.error('Failed to get response from Nova Assistant');
+      toast.error('Failed to get response from Aegix Assistant');
       setMessages(prev => [...prev, {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
@@ -120,7 +120,7 @@ export default function NovaAssistant() {
              <Bot className="w-6 h-6 text-soc-purple" />
           </div>
           <div>
-            <h3 className="font-bold text-lg font-syne text-soc-purple">Nova Operator Assistant</h3>
+            <h3 className="font-bold text-lg font-syne text-soc-purple">Aegix Operator Assistant</h3>
             <p className="text-[10px] uppercase tracking-widest text-soc-purple/70 font-mono">Conversational AI Engine</p>
           </div>
         </div>

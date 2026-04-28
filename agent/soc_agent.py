@@ -18,7 +18,7 @@ def get_process_data():
             pinfo = proc.info
             cmdline = " ".join(pinfo['cmdline']) if pinfo['cmdline'] else ""
             
-            # High-priority suspicious keywords for Nova analysis
+            # High-priority suspicious keywords for Aegix analysis
             import re
             suspicious_pattern = re.compile(r'\b(miner|hack|exploit|malware|keylogger|ncat|reverse_shell|base64|meterpreter|beacon|cobalt)\b', re.IGNORECASE)
             is_malicious = bool(suspicious_pattern.search(pinfo['name'])) or bool(suspicious_pattern.search(cmdline))

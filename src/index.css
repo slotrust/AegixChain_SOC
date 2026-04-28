@@ -11,8 +11,8 @@
   --color-soc-yellow: #ffb347;
   --color-soc-red: #ff4757;
   --color-soc-blue: #00e5c0; /* Mapped to cyan for backward compatibility */
-  --color-soc-cyan: #3b82f6;
-  --color-soc-purple: #f59e0b;
+  --color-soc-cyan: #00e5c0;
+  --color-soc-purple: #7f77dd;
 
   --font-sans: "DM Sans", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "DM Mono", ui-monospace, SFMono-Regular, monospace;
@@ -58,82 +58,82 @@
   to { transform: scale(1.1); }
 }
 
-/* NovaShield Logo Animations */
-.nova-logo .glow-orb {
+/* AegixChain Logo Animations */
+.aegix-logo .glow-orb {
   position: absolute;
   width: 100%; height: 100%; border-radius: 50%;
   background: radial-gradient(circle, rgba(0,229,192,0.11) 0%, transparent 65%);
   top: 50%; left: 50%;
   transform: translate(-50%, -50%);
   pointer-events: none;
-  animation: nova-breathe 4s ease-in-out infinite;
+  animation: aegix-breathe 4s ease-in-out infinite;
 }
-@keyframes nova-breathe {
+@keyframes aegix-breathe {
   0%,100% { opacity:0.75; transform:translate(-50%,-50%) scale(1);   }
   50%      { opacity:1;    transform:translate(-50%,-50%) scale(1.1); }
 }
 
-.nova-logo .mark { position: relative; width: 100%; height: 100%; }
-.nova-logo .mark svg { width: 100%; height: 100%; overflow: visible; }
+.aegix-logo .mark { position: relative; width: 100%; height: 100%; }
+.aegix-logo .mark svg { width: 100%; height: 100%; overflow: visible; }
 
-@keyframes nova-spin-cw  { to { transform: rotate( 360deg); } }
-@keyframes nova-spin-ccw { to { transform: rotate(-360deg); } }
-.nova-logo .ring-deco { animation: nova-spin-ccw 36s linear infinite; transform-origin: 140px 140px; }
-.nova-logo .ring-mid  { animation: nova-spin-cw  24s linear infinite; transform-origin: 140px 140px; }
+@keyframes aegix-spin-cw  { to { transform: rotate( 360deg); } }
+@keyframes aegix-spin-ccw { to { transform: rotate(-360deg); } }
+.aegix-logo .ring-deco { animation: aegix-spin-ccw 36s linear infinite; transform-origin: 140px 140px; }
+.aegix-logo .ring-mid  { animation: aegix-spin-cw  24s linear infinite; transform-origin: 140px 140px; }
 
-@keyframes nova-core-pulse {
+@keyframes aegix-core-pulse {
   0%,100% { r: 22px; opacity: 1;    }
   50%      { r: 28px; opacity: 0.60; }
 }
-.nova-logo .core-fill { animation: nova-core-pulse 2.8s ease-in-out infinite; }
+.aegix-logo .core-fill { animation: aegix-core-pulse 2.8s ease-in-out infinite; }
 
-@keyframes nova-scan {
+@keyframes aegix-scan {
   0%   { transform: translateY(-115px); opacity: 0;    }
   8%   { opacity: 0.55; }
   92%  { opacity: 0.55; }
   100% { transform: translateY( 115px); opacity: 0;    }
 }
-.nova-logo .scan-line {
-  animation: nova-scan 3.4s ease-in-out infinite 2s;
+.aegix-logo .scan-line {
+  animation: aegix-scan 3.4s ease-in-out infinite 2s;
   transform-box: fill-box;
   transform-origin: 50% 50%;
 }
 
-@keyframes nova-draw { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
-.nova-logo .dl { stroke-dasharray: 1; animation: nova-draw 0.55s ease-out both; }
+@keyframes aegix-draw { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
+.aegix-logo .dl { stroke-dasharray: 1; animation: aegix-draw 0.55s ease-out both; }
 
-.nova-logo .t-deco  { animation-delay: 0.05s; }
-.nova-logo .t-outer { animation-delay: 0.2s;  }
-.nova-logo .t-o2m   { animation-delay: 0.9s;  }
-.nova-logo .t-mid   { animation-delay: 0.75s; }
-.nova-logo .t-m2i   { animation-delay: 1.2s;  }
-.nova-logo .t-diag  { animation-delay: 1.0s;  }
-.nova-logo .t-i2c   { animation-delay: 1.55s; }
+.aegix-logo .t-deco  { animation-delay: 0.05s; }
+.aegix-logo .t-outer { animation-delay: 0.2s;  }
+.aegix-logo .t-o2m   { animation-delay: 0.9s;  }
+.aegix-logo .t-mid   { animation-delay: 0.75s; }
+.aegix-logo .t-m2i   { animation-delay: 1.2s;  }
+.aegix-logo .t-diag  { animation-delay: 1.0s;  }
+.aegix-logo .t-i2c   { animation-delay: 1.55s; }
 
-@keyframes nova-draw-poly { from { stroke-dashoffset: 800; } to { stroke-dashoffset: 0; } }
-.nova-logo .dp-deco  { stroke-dasharray: 800; animation: nova-draw-poly 1.4s 0.05s ease-out both; }
-.nova-logo .dp-outer { stroke-dasharray: 800; animation: nova-draw-poly 1.0s 0.2s  ease-out both; }
-.nova-logo .dp-mid   { stroke-dasharray: 500; animation: nova-draw-poly 0.9s 0.75s ease-out both; }
+@keyframes aegix-draw-poly { from { stroke-dashoffset: 800; } to { stroke-dashoffset: 0; } }
+.aegix-logo .dp-deco  { stroke-dasharray: 800; animation: aegix-draw-poly 1.4s 0.05s ease-out both; }
+.aegix-logo .dp-outer { stroke-dasharray: 800; animation: aegix-draw-poly 1.0s 0.2s  ease-out both; }
+.aegix-logo .dp-mid   { stroke-dasharray: 500; animation: aegix-draw-poly 0.9s 0.75s ease-out both; }
 
-@keyframes nova-np    { 0%{r:0;opacity:0} 70%{r:8px;opacity:1} 100%{r:7px;opacity:1}      }
-@keyframes nova-np-sm { 0%{r:0;opacity:0} 70%{r:7px;opacity:.93} 100%{r:6px;opacity:.93}  }
-@keyframes nova-np-xs { 0%{r:0;opacity:0} 100%{r:5.5px;opacity:.65}                     }
-.nova-logo .np    { animation: nova-np    0.4s ease-out both; }
-.nova-logo .np-sm { animation: nova-np-sm 0.4s ease-out both; }
-.nova-logo .np-xs { animation: nova-np-xs 0.35s ease-out both; }
+@keyframes aegix-np    { 0%{r:0;opacity:0} 70%{r:8px;opacity:1} 100%{r:7px;opacity:1}      }
+@keyframes aegix-np-sm { 0%{r:0;opacity:0} 70%{r:7px;opacity:.93} 100%{r:6px;opacity:.93}  }
+@keyframes aegix-np-xs { 0%{r:0;opacity:0} 100%{r:5.5px;opacity:.65}                     }
+.aegix-logo .np    { animation: aegix-np    0.4s ease-out both; }
+.aegix-logo .np-sm { animation: aegix-np-sm 0.4s ease-out both; }
+.aegix-logo .np-xs { animation: aegix-np-xs 0.35s ease-out both; }
 
-.nova-logo .d055{animation-delay:.55s} .nova-logo .d062{animation-delay:.62s} .nova-logo .d069{animation-delay:.69s}
-.nova-logo .d076{animation-delay:.76s} .nova-logo .d083{animation-delay:.83s} .nova-logo .d090{animation-delay:.90s}
-.nova-logo .d110{animation-delay:1.10s} .nova-logo .d117{animation-delay:1.17s} .nova-logo .d124{animation-delay:1.24s}
-.nova-logo .d131{animation-delay:1.31s} .nova-logo .d138{animation-delay:1.38s} .nova-logo .d145{animation-delay:1.45s}
-.nova-logo .d165{animation-delay:1.65s} .nova-logo .d172{animation-delay:1.72s} .nova-logo .d179{animation-delay:1.79s}
-.nova-logo .d186{animation-delay:1.86s} .nova-logo .d193{animation-delay:1.93s} .nova-logo .d200{animation-delay:2.00s}
+.aegix-logo .d055{animation-delay:.55s} .aegix-logo .d062{animation-delay:.62s} .aegix-logo .d069{animation-delay:.69s}
+.aegix-logo .d076{animation-delay:.76s} .aegix-logo .d083{animation-delay:.83s} .aegix-logo .d090{animation-delay:.90s}
+.aegix-logo .d110{animation-delay:1.10s} .aegix-logo .d117{animation-delay:1.17s} .aegix-logo .d124{animation-delay:1.24s}
+.aegix-logo .d131{animation-delay:1.31s} .aegix-logo .d138{animation-delay:1.38s} .aegix-logo .d145{animation-delay:1.45s}
+.aegix-logo .d165{animation-delay:1.65s} .aegix-logo .d172{animation-delay:1.72s} .aegix-logo .d179{animation-delay:1.79s}
+.aegix-logo .d186{animation-delay:1.86s} .aegix-logo .d193{animation-delay:1.93s} .aegix-logo .d200{animation-delay:2.00s}
 
-@keyframes nova-core-in {
+@keyframes aegix-core-in {
   from { opacity:0; transform:scale(0.2); }
   to   { opacity:1; transform:scale(1);   }
 }
-.nova-logo .core-g { animation: nova-core-in 0.5s 2.1s cubic-bezier(0.34,1.56,0.64,1) both; transform-origin: 140px 140px; }
+.aegix-logo .core-g { animation: aegix-core-in 0.5s 2.1s cubic-bezier(0.34,1.56,0.64,1) both; transform-origin: 140px 140px; }
 
 @keyframes shimmer {
   100% { left: 200%; }
