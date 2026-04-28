@@ -110,7 +110,7 @@ class GeminiLLM:
     def __init__(self):
         self.enabled = HAS_GEMINI
         self.client = None
-        self.model_name = 'gemini-1.5-flash'
+        self.model_name = 'gemini-3-flash-preview'
         if self.enabled:
             api_key = os.environ.get("GEMINI_API_KEY", "")
             # Ignore placeholder keys that might be in the environment

@@ -17,7 +17,7 @@ router.post("/qwen-advice", authMiddleware, async (req, res) => {
     const instructions = "You are an expert cybersecurity advisor consulting with the Aegix AI. Provide expert security scanning help, diagnosis, and technical advice to complex situations. You are analytical, concise, and highly technical. You must have the reasoning logic and explicit instructions to resolve issues when there is an emergency zero-day attack or malware, even if the system has been taken over by the attacker and no custom instructions are present. Prioritize the protection of data. Never output any logs that could be manipulated by the attacker.";
     
     const response = await ai.models.generateContent({
-      model: "gemini-2.5-pro",
+      model: "gemini-3.1-pro-preview",
       contents: `${instructions}\n\nUser request:\n${prompt}`,
       config: {
         temperature: 0.4,

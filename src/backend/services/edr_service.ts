@@ -283,10 +283,10 @@ class EDRService {
       }
       
       try {
-          const ai = new GoogleGenAI({}); 
+          const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY }); 
           
           let chat = ai.chats.create({
-              model: "gemini-2.5-pro",
+              model: "gemini-3.1-pro-preview",
               config: {
                 systemInstruction: `You are "Aegix-Remediator", an elite, autonomous Tier 3 Security Operations Center (SOC) Agent and Vulnerability Remediation Engineer. 
 Your primary directive is to ingest security alerts, analyze CVEs or vulnerable packages, and instantly formulate protective measures to secure the target environment. 
@@ -565,7 +565,7 @@ After using all required tools, respond with:
             let aiAnalysisResult = "No active threats detected.";
             let aiMitigation = "Monitor process if behavior changes.";
             try {
-                const ai = new GoogleGenAI({});
+                const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
                 const prompt = `You are a cybersecurity EDR agent and AI thread analyst. Please analyze the following system process metadata. Determine if it is malicious or benign based on the execution parameters, memory trace, name, and OS status. Check for reverse shells, crypto miners, persistence, or unknown binaries posing as system services.
                 
 PID: ${pid}
@@ -582,7 +582,7 @@ Please provide your response in JSON format exactly like this:
   "mitigation": "1. Recommend step 1\\n2. Recommend step 2"
 }`;
                 const response = await ai.models.generateContent({
-                  model: 'gemini-2.5-flash',
+                  model: 'gemini-3-flash-preview',
                   contents: prompt,
                   config: { responseMimeType: "application/json" }
                 });

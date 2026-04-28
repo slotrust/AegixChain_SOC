@@ -24,7 +24,7 @@ class MultiAgentSystem extends EventEmitter {
 
   constructor() {
     super();
-    this.ai = new GoogleGenAI({}); // Relies on GEMINI_API_KEY env var
+    this.ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY }); // Relies on GEMINI_API_KEY env var
     
     // Initialize DB table for agent memory if not exists
     db.exec(`
@@ -220,7 +220,7 @@ Format strictly as JSON: {"explanation": "...", "recommended_action": "..."}
         
         // Use Gemini API
         const response = await this.ai.models.generateContent({
-           model: 'gemini-2.5-flash',
+           model: 'gemini-3-flash-preview',
            contents: prompt
         });
 

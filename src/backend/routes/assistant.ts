@@ -64,7 +64,7 @@ ${contextStr}
 `;
 
     const chatSession = ai.chats.create({
-      model: 'gemini-2.5-pro',
+      model: 'gemini-3.1-pro-preview',
       config: {
         systemInstruction: systemPrompt,
         temperature: 0.2
@@ -76,7 +76,7 @@ ${contextStr}
     let fullPrompt = history.map(h => `${h.role === 'user' ? 'User' : 'Aegix'}: ${h.text}`).join('\n') + `\nUser: ${query}`;
     
     const response = await ai.models.generateContent({
-      model: 'gemini-2.5-pro',
+      model: 'gemini-3.1-pro-preview',
       contents: fullPrompt,
       config: {
         systemInstruction: systemPrompt,
