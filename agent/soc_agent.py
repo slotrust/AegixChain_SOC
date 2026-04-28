@@ -7,6 +7,7 @@ import socket
 import os
 import platform
 
+
 # Configuration
 BACKEND_URL = "http://localhost:3000/api/system/system-data"
 POLL_INTERVAL = 3  # seconds
