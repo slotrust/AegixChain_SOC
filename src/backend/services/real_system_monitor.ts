@@ -1,4 +1,5 @@
 import fs from 'fs';
+import os from 'os';
 import { systemService } from './system_service.js';
 import si from 'systeminformation';
 import { execSync } from 'child_process';
@@ -18,47 +19,77 @@ export const realSystemMonitor = {
       if (isPollingProcesses) return;
       isPollingProcesses = true;
       try {
-        const processData = await si.processes();
-        // Sort by cpu to match previous behavior
-        const sortedProcesses = processData.list.sort((a, b) => (b.cpu === Infinity ? 0 : b.cpu) - (a.cpu === Infinity ? 0 : a.cpu)).slice(0, 100);
-        
+        const platform = os.platform();
         const newCache = [];
-        for (const proc of sortedProcesses) {
-          const pid = proc.pid;
-          const cpu = proc.cpu === Infinity ? 0 : proc.cpu || 0;
-          const mem = proc.mem || 0;
-          const user = proc.user || 'Unknown';
-          const name = proc.name || 'Unknown';
-          const cmdline = (proc.path ? proc.path + ' ' : '') + (proc.command || '') + ' ' + (proc.params || '');
-          const status = proc.state || 'RUNNING';
-          
-          const suspiciousRegex = /\b(nc|nmap|miner|exploit|reverse|meterpreter|beacon|cobalt|malware|keylogger|ncat|reverse_shell|base64)\b/i;
-          const isSuspicious = suspiciousRegex.test(name) || suspiciousRegex.test(cmdline);
-          const isDevCommand = /\b(vite|node|tsx|npm|python|python3|concurrently|sh|ps|bash|grep|cat|ls|npx|systeminformation)\b/i.test(cmdline) || /\b(vite|node|tsx|npm|python|python3|concurrently|sh|ps|bash)\b/i.test(name);
-          const flagged = isSuspicious && !isDevCommand;
-          
-          const details = {
-              pid,
-              name,
-              cpu_percent: cpu,
-              memory_usage: mem,
-              exe_path: name,
-              cmdline,
-              user,
-              status: status,
-              timestamp: new Date().toISOString(),
-              is_suspicious: flagged ? 1 : 0
-          };
-          newCache.push(details);
-          
-          if (flagged) {
-            await systemService.processData({
-              type: 'process',
-              details,
-              risk_score: 0.9,
-              flagged: true
-            });
+        
+        let sortedProcesses = [];
+        if (platform === 'win32') {
+          const processData = await si.processes();
+          sortedProcesses = processData.list.sort((a, b) => (b.cpu === Infinity ? 0 : b.cpu) - (a.cpu === Infinity ? 0 : a.cpu)).slice(0, 100);
+          for (const proc of sortedProcesses) {
+            const pid = proc.pid;
+            const cpu = proc.cpu === Infinity ? 0 : proc.cpu || 0;
+            const mem = proc.mem || 0;
+            const user = proc.user || 'Unknown';
+            const name = proc.name || 'Unknown';
+            const cmdline = (proc.path ? proc.path + ' ' : '') + (proc.command || '') + ' ' + (proc.params || '');
+            const status = proc.state || 'RUNNING';
+
+            const suspiciousRegex = /\b(nc|nmap|miner|exploit|reverse|meterpreter|beacon|cobalt|malware|keylogger|ncat|reverse_shell|base64)\b/i;
+            const isSuspicious = suspiciousRegex.test(name) || suspiciousRegex.test(cmdline);
+            const isDevCommand = /\b(vite|node|tsx|npm|python|python3|concurrently|sh|ps|bash|grep|cat|ls|npx|systeminformation)\b/i.test(cmdline) || /\b(vite|node|tsx|npm|python|python3|concurrently|sh|ps|bash)\b/i.test(name);
+            const flagged = isSuspicious && !isDevCommand;
+
+            const details = { pid, name, cpu_percent: cpu, memory_usage: mem, exe_path: name, cmdline, user, status, timestamp: new Date().toISOString(), is_suspicious: flagged ? 1 : 0 };
+            newCache.push(details);
+            if (flagged) {
+              await systemService.processData({ type: 'process', details, risk_score: 0.9, flagged: true });
+            }
           }
+        } else {
+            const psOutput = execSync('ps -axo pid,pcpu,pmem,user,comm,args --sort=-pcpu | head -n 101').toString();
+            const lines = psOutput.split('\n').filter(Boolean).slice(1);
+            
+            for (const line of lines) {
+              const parts = line.trim().split(/\s+/);
+              if (parts.length < 6) continue;
+              
+              const pid = parseInt(parts[0], 10);
+              const cpu = parseFloat(parts[1]) || 0;
+              const mem = parseFloat(parts[2]) || 0;
+              const user = parts[3];
+              const name = parts[4];
+              const cmdline = parts.slice(5).join(' ');
+              const status = 'RUNNING';
+              
+              const suspiciousRegex = /\b(nc|nmap|miner|exploit|reverse|meterpreter|beacon|cobalt|malware|keylogger|ncat|reverse_shell|base64)\b/i;
+              const isSuspicious = suspiciousRegex.test(name) || suspiciousRegex.test(cmdline);
+              const isDevCommand = /\b(vite|node|tsx|npm|python|python3|concurrently|sh|ps|bash|grep|cat|ls|npx|systeminformation)\b/i.test(cmdline) || /\b(vite|node|tsx|npm|python|python3|concurrently|sh|ps|bash)\b/i.test(name);
+              const flagged = isSuspicious && !isDevCommand;
+              
+              const details = {
+                  pid,
+                  name,
+                  cpu_percent: cpu,
+                  memory_usage: mem,
+                  exe_path: name,
+                  cmdline,
+                  user,
+                  status: status,
+                  timestamp: new Date().toISOString(),
+                  is_suspicious: flagged ? 1 : 0
+              };
+              newCache.push(details);
+              
+              if (flagged) {
+                await systemService.processData({
+                  type: 'process',
+                  details,
+                  risk_score: 0.9,
+                  flagged: true
+                });
+              }
+            }
         }
         processCache.length = 0;
         processCache.push(...newCache);

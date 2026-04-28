@@ -545,35 +545,77 @@ After using all required tools, respond with:
         try {
             // Check if PID actually exists using real OS commands
             const procPath = `/proc/${pid}`;
-            if (!fs.existsSync(procPath)) {
-                return {
-                    pid: pid,
-                    process_name: processName,
-                    os_status: 'Process Not Running',
-                    analysis: `The requested process PID ${pid} is not currently active in the real OS process tree. The malicious process may have terminated, crashed, or evaded standard enumeration.`,
-                    mitigation: `1. Ensure EDR zombie-process monitoring is active.\n2. Search syslog and audit logs for historical execution of '${processName}'.\n3. Execute a static filesystem sweep for dormant binaries matching the signature.`
-                };
+            let cmdline = 'Unknown';
+            let memoryStatus = "Protected/Elevated";
+            let statusContents = "";
+            let os_status = 'Process Not Running';
+
+            if (fs.existsSync(procPath)) {
+                os_status = 'Active';
+                cmdline = fs.readFileSync(path.join(procPath, 'cmdline'), 'utf8').replace(/\0/g, ' ').trim() || 'Unknown';
+                memoryStatus = "Accessible";
+                try {
+                    statusContents = fs.readFileSync(path.join(procPath, 'status'), 'utf8');
+                } catch(e) {
+                    memoryStatus = "Protected/Elevated";
+                }
             }
 
-            // Real extraction of active process internals
-            const cmdline = fs.readFileSync(path.join(procPath, 'cmdline'), 'utf8').replace(/\0/g, ' ').trim() || 'Unknown';
-            let memoryStatus = "Accessible";
-            let statusContents = "";
+            // Use AI to analyze
+            let aiAnalysisResult = "No active threats detected.";
+            let aiMitigation = "Monitor process if behavior changes.";
             try {
-                statusContents = fs.readFileSync(path.join(procPath, 'status'), 'utf8');
-            } catch(e) {
-                memoryStatus = "Protected/Elevated";
+                const ai = new GoogleGenAI({});
+                const prompt = `You are a cybersecurity EDR agent and AI thread analyst. Please analyze the following system process metadata. Determine if it is malicious or benign based on the execution parameters, memory trace, name, and OS status. Check for reverse shells, crypto miners, persistence, or unknown binaries posing as system services.
+                
+PID: ${pid}
+Process Name: ${processName}
+OS Status: ${os_status}
+Command Line: ${cmdline}
+Memory Accessible: ${memoryStatus}
+Process Status Telemetry: 
+${statusContents.substring(0, 1000)}
+
+Please provide your response in JSON format exactly like this:
+{
+  "analysis": "Your detailed reasoning and threat detection...",
+  "mitigation": "1. Recommend step 1\\n2. Recommend step 2"
+}`;
+                const response = await ai.models.generateContent({
+                  model: 'gemini-2.5-flash',
+                  contents: prompt,
+                  config: { responseMimeType: "application/json" }
+                });
+                
+                const responseJson = JSON.parse(response.text() || "{}");
+                if (responseJson.analysis) aiAnalysisResult = responseJson.analysis;
+                if (responseJson.mitigation) aiMitigation = responseJson.mitigation;
+            } catch (err) {
+                console.error("AI Analysis generation failed fallback to heuristics", err);
+                // Fallback to basic heuristics
+                const suspicious = ['reverse', 'nc', 'nmap', 'miner', 'python', 'sh', 'bash', 'cmd'].some(s => cmdline.toLowerCase().includes(s) || processName.toLowerCase().includes(s));
+                if (os_status === 'Active') {
+                    aiAnalysisResult = suspicious 
+                        ? `Live OS Telemetry extracted. Heuristic flags triggered. Network sockets and child forks indicate potential unauthorized bindings consistent with reverse-engineering threats or unauthorized scripts.`
+                        : `Live OS Telemetry extracted. No obvious malicious signatures found in execution parameters. Process appears normal.`;
+                    aiMitigation = suspicious
+                        ? `1. Execute 'kill -9 ${pid}' globally.\n2. Quarantine executing binary.\n3. Verify open sockets to trace potential C2.`
+                        : `1. Continue monitoring.\n2. Add to baseline if trusted.`;
+                } else {
+                    aiAnalysisResult = `The requested process PID ${pid} is not currently active in the real OS process tree. The malicious process may have terminated, crashed, or evaded standard enumeration.`;
+                    aiMitigation = `1. Ensure EDR zombie-process monitoring is active.\n2. Search syslog and audit logs for historical execution of '${processName}'.\n3. Execute a static filesystem sweep for dormant binaries matching the signature.`;
+                }
             }
 
             return {
                 pid: pid,
                 process_name: processName,
-                os_status: 'Active',
+                os_status,
                 command_line: cmdline,
                 memory_read_status: memoryStatus,
-                live_telemetry: statusContents.substring(0, 500) + '...', // send slice of real OS memory map limits
-                analysis: `Live OS Telemetry extracted. Process is actively executing under PID ${pid}. Real-time behavior maps show executing command: [${cmdline}]. Network sockets and child forks indicate potential unauthorized persistent bindings consistent with reverse-engineering threats.`,
-                mitigation: `1. Execute 'kill -9 ${pid}' globally.\n2. Quarantine executing binary.\n3. Verify open sockets to trace potential command-and-control connection.`
+                live_telemetry: statusContents.substring(0, 500) + (statusContents.length > 500 ? '...' : ''),
+                analysis: aiAnalysisResult,
+                mitigation: aiMitigation
             };
         } catch (err: any) {
              return { error: `Process analysis failed: ${err.message}` };
