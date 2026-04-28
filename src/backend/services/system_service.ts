@@ -5,7 +5,7 @@ import { multiAgentSystem } from "./multi_agent_system.js";
 import { execSync } from "child_process";
 import si from 'systeminformation';
 
-import { processCache, networkCache } from './real_system_monitor.js';
+import { processCache, networkCache, cpuStatsCache, networkStatsCache } from './real_system_monitor.js';
 
 export const systemService = {
   processData: async (data: any) => {
@@ -76,6 +76,19 @@ export const systemService = {
           mitigations: "Block the remote IP address, investigate the process making the connection, and check for data exfiltration."
         });
       }
+    } else if (type === 'network_spike') {
+         const recentSpanks = db.prepare(`
+            SELECT 1 FROM alerts WHERE reason LIKE 'Anomalous Network Activity Spike%' AND timestamp > datetime('now', '-1 minute') LIMIT 1
+         `).get();
+         if (recentSpanks) return;
+
+         await alertService.createAlert({
+            log_id: null,
+            severity: 'High',
+            reason: `Anomalous Network Activity Spike: Upload: ${(details.tx_sec/1024/1024).toFixed(2)} MB/s, Download: ${(details.rx_sec/1024/1024).toFixed(2)} MB/s`,
+            score: risk_score,
+            mitigations: "Identify the top bandwidth-consuming processes using EDR or task manager. Check for potential data exfiltration or DDoS participation."
+         });
     }
   },
 
@@ -85,5 +98,13 @@ export const systemService = {
 
   getNetworkConnections: async (limit = 100) => {
     return networkCache.slice(0, limit);
+  },
+
+  getCpuStats: async () => {
+    return cpuStatsCache;
+  },
+
+  getNetworkStats: async () => {
+    return networkStatsCache;
   }
 };

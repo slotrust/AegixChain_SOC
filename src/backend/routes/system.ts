@@ -38,4 +38,22 @@ router.get("/network", async (req, res) => {
   }
 });
 
+router.get("/network-stats", async (req, res) => {
+  try {
+    const stats = await systemService.getNetworkStats();
+    res.json(stats);
+  } catch (error) {
+    res.status(500).json({ error: "Failed to fetch network stats" });
+  }
+});
+
+router.get("/cpu-stats", async (req, res) => {
+  try {
+    const stats = await systemService.getCpuStats();
+    res.json(stats);
+  } catch (error) {
+    res.status(500).json({ error: "Failed to fetch cpu stats" });
+  }
+});
+
 export default router;

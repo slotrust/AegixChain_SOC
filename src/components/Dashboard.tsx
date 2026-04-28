@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import LoginChart from './LoginChart';
 import LogFeed from './LogFeed';
 import AlertsPanel from './AlertsPanel';
+import ResourceMonitor from './ResourceMonitor';
 
 interface DashboardProps {
   onSelectLog: (log: any) => void;
@@ -233,6 +234,11 @@ export default function Dashboard({ onSelectLog, onInvestigate }: DashboardProps
             </div>
           </div>
         </motion.div>
+      </div>
+
+      {/* Row: Real-Time Resource Monitor (CPU & Network) */}
+      <div className="w-full">
+         <ResourceMonitor />
       </div>
 
       {/* Row 3: Charts */}

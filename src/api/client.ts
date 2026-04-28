@@ -67,6 +67,8 @@ export const api = {
   saveChatHistory: (role, content) => client.post('/chat/history', { role, content }),
   getProcesses: () => client.get('/system/processes'),
   getNetwork: () => client.get('/system/network'),
+  getNetworkStats: () => client.get('/system/network-stats').then(res => res.data),
+  getCpuStats: () => client.get('/system/cpu-stats').then(res => res.data),
   getHealth: () => client.get('/health'),
   getUsers: () => client.get('/users'),
   createUser: (userData) => client.post('/users', userData),

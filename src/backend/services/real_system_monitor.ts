@@ -6,10 +6,13 @@ import { execSync } from 'child_process';
 
 let isPollingProcesses = false;
 let isPollingNetwork = false;
+let isPollingStats = false;
 
 // caches for quick API response
 export let processCache: any[] = [];
 export let networkCache: any[] = [];
+export let cpuStatsCache: any[] = [];
+export let networkStatsCache: any[] = [];
 
 export const realSystemMonitor = {
   start: () => {
@@ -183,5 +186,70 @@ export const realSystemMonitor = {
         isPollingNetwork = false;
       }
     }, 5000);
+
+    // Poll detailed CPU and Network Stats every 2 seconds
+    setInterval(async () => {
+      if (isPollingStats) return;
+      isPollingStats = true;
+      try {
+        const [cpuData, netData, memData] = await Promise.all([
+          si.currentLoad(),
+          si.networkStats(),
+          si.mem()
+        ]);
+        
+        // CPU Stats (overall and per core)
+        const newCpuCache = {
+            timestamp: new Date().toISOString(),
+            currentLoad: cpuData.currentLoad,
+            currentLoadUser: cpuData.currentLoadUser,
+            currentLoadSystem: cpuData.currentLoadSystem,
+            cores: cpuData.cpus.map((c, i) => ({
+                core: i,
+                load: c.load
+            }))
+        };
+        
+        cpuStatsCache.push(newCpuCache);
+        if (cpuStatsCache.length > 30) cpuStatsCache.shift(); // Keep last 30 entries (60 seconds)
+
+        // Network Stats (sum of all interfaces)
+        let rx_sec = 0;
+        let tx_sec = 0;
+        let rx_bytes = 0;
+        let tx_bytes = 0;
+
+        for (const iface of netData) {
+            rx_sec += iface.rx_sec || 0;
+            tx_sec += iface.tx_sec || 0;
+            rx_bytes += iface.rx_bytes || 0;
+            tx_bytes += iface.tx_bytes || 0;
+        }
+
+        const newNetCache = {
+            timestamp: new Date().toISOString(),
+            rx_sec: Math.max(0, rx_sec),
+            tx_sec: Math.max(0, tx_sec),
+            rx_bytes: Math.max(0, rx_bytes),
+            tx_bytes: Math.max(0, tx_bytes)
+        };
+
+        networkStatsCache.push(newNetCache);
+        if (networkStatsCache.length > 30) networkStatsCache.shift(); // Keep last 30 entries (60 seconds)
+
+        // Alert on network spikes (e.g., > 10MB/s)
+        if (rx_sec > 10 * 1024 * 1024 || tx_sec > 10 * 1024 * 1024) {
+            await systemService.processData({
+                type: 'network_spike',
+                details: newNetCache,
+                risk_score: 0.8,
+                flagged: true
+            });
+        }
+      } catch (error) {
+      } finally {
+        isPollingStats = false;
+      }
+    }, 2000);
   }
 };
