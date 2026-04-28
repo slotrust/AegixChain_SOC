@@ -1,20 +1,46 @@
-# 🛡️ CyberSOC AI Platform
+# 🛡️ Aegix - CyberSOC AI Platform
 
 ![CyberSOC Banner](https://img.shields.io/badge/CyberSOC-AI--Powered_Security-0ea5e9?style=for-the-badge)
 
-CyberSOC is a real-time, AI-driven Security Operations Center (SOC) platform. Built with a modern React frontend and a robust Node.js/Express backend, it monitors system processes, network connections, and authentication logs. It utilizes custom machine learning algorithms to detect anomalies, generate alerts, and features an automated Intrusion Prevention System (IPS) to actively defend against threats.
+Aegix CyberSOC is a cutting-edge, real-time, AI-driven Security Operations Center (SOC) platform engineered to defend modern infrastructures. Built as a full-stack web application with a responsive React frontend and a powerful Node.js/Express backend, it provides unparalleled visibility into host system health and network security by monitoring real hardware and operating system parameters. 
+
+**What is the app all about?**
+The app is a comprehensive security tool designed for DevOps teams, sysadmins, and cybersecurity professionals. Instead of relying on simulated or mock data, Aegix directly interfaces with the underlying host operating system to retrieve authentic system processes (`ps`), active network connections (`ss` or `systeminformation`), and access logs. It processes this continuous stream of real-time telemetry through an embedded custom machine learning engine to detect anomalies, generate instantaneous alerts, and invoke an automated Intrusion Prevention System (IPS) to actively block malicious actors.
 
 ## ✨ Key Features
 
-- **🤖 AI Anomaly Detection:** Automated threat detection using custom ML feature extraction and prediction.
+- **📊 Real System Monitoring (No Simulations):** Aegix accesses real system data from the machine it runs on. It monitors live host system processes and active network connections directly from the underlying environment, ensuring that the telemetry you see represents actual system state.
+- **🤖 AI Anomaly Detection:** Automated threat detection using custom ML feature extraction and prediction, analyzing patterns in real-time system logs.
 - **🛡️ Intrusion Prevention System (IPS):** Automated defense mechanism that blocks malicious IP addresses based on high anomaly scores or brute force attack detection.
 - **🛑 Brute Force Protection:** Built-in rate limiting and automatic IP blocking for repeated failed login attempts.
-- **🖥️ Real-Time System Monitoring:** Live tracking of host system processes (`ps`) and network connections (`ss`) directly from the underlying Linux container.
-- **📊 Interactive Dashboard:** Beautiful, responsive UI with live charts, event distributions, and login activity tracking.
-- **🔍 Advanced Filtering & Sorting:** Filter and sort live logs, active network connections, and running processes directly from the UI for rapid threat analysis.
-- **🚨 Smart Alerts:** Automated alert generation with AI-explained reasons and suggested mitigation steps.
-- **💬 Security Chatbot:** Integrated assistant for security context and queries.
-- **🔒 Secure Authentication & User Management:** Integrated with Firebase Authentication (Google Sign-In) and Firestore for role-based access control (RBAC), complete with robust error boundaries for permission management.
+- **📈 Advanced Logs Tab & AI Summarization:** The core of the investigative experience. The logs tab aggregates real system events. When an analyst clicks on a specific log entry, a dedicated generative AI module processes the event context and creates an **instant, plain-English summary** of what happened, why it might be suspicious, and what mitigation steps to take.
+- **🔍 Advanced Filtering & Sorting:** Filter and sort real-time logs, active network connections, and running processes directly from the UI for rapid forensic analysis.
+- **🚨 Smart Alerts:** Automated alert generation with AI-explained reasons.
+- **💬 Security Chatbot:** Integrated AI-powered chat assistant for security context and queries.
+- **🔒 Secure Authentication & User Management:** Integrated with Firebase Authentication (Google Sign-In) and Firestore for role-based access control (RBAC).
+
+## 🏗️ Architecture
+
+Aegix utilizes a modern, decoupled client-server architecture packed into a unified full-stack application suitable for diverse deployment environments:
+
+1. **Frontend Layer (Client):** 
+   - A single-page application built with **React 18** and **Vite**.
+   - Uses **Tailwind CSS** for an adaptive, dark-themed cyberpunk aesthetic.
+   - Leverages **Recharts** for real-time data visualization.
+   - Communicates with the backend via secure RESTful APIs.
+
+2. **Backend Application Layer (Server):**
+   - Built on **Node.js** and **Express.js**.
+   - Acts as the central orchestrator, serving the frontend assets in production while exposing `/api/*` endpoints for data ingestion and retrieval.
+   - **System Sensor Modules:** Native Node.js modules execute secure shell commands (`child_process`) to poll the host OS for real data (e.g., parsing `/etc/shadow` file integrity, running `ps -axo`, fetching network connections via `systeminformation`).
+
+3. **AI & Machine Learning Engine Layer:**
+   - **Local ML Evaluation:** A custom feature extraction and anomaly detection module (`src/ai/`) evaluates numeric patterns locally.
+   - **Generative AI Integration:** Uses the **Google Gemini API** (`@google/genai`) for complex cognitive tasks, such as generating readable summaries for specific log entries and powering the intelligent security chatbot.
+
+4. **Data Persistence Layer:**
+   - **Local SQLite Database:** Uses `better-sqlite3` strictly for high-throughput storage of system logs and blocked IP lists.
+   - **Firebase Firestore:** Used as a cloud-synced database for enterprise configuration and Role-Based Access Control.
 
 ## 🛠️ Tech Stack
 
@@ -94,6 +120,28 @@ To build and run the application in a production environment:
 npm run build
 npm start
 ```
+
+## ☁️ Deployment on Vercel
+
+To deploy this full-stack application (frontend + Express backend) to Vercel, ensure your Vercel project configuration matches the following settings so that both the React UI and the Node.js API function correctly.
+
+### Vercel Project Settings:
+
+- **Framework Preset:** `Vite` (or `Other` if you are using custom build scripts)
+- **Root Directory:** `./` (Leave as default root)
+- **Build Command:** `npm run build`
+- **Output Directory:** `dist`
+- **Install Command:** `npm install`
+
+### Environment Variables on Vercel:
+
+You must add the following environment variables in your Vercel Project Settings interface (`Settings > Environment Variables`):
+
+- `GEMINI_API_KEY`: Your Google Gemini API Key (Required for AI Summaries and Chatbot).
+- `JWT_SECRET`: A secure, random string for cryptographic token signing.
+- `NODE_ENV`: Set to `production`.
+
+*Note for Vercel Deployments: Since Vercel uses ephemeral Serverless Functions, the "Real System Monitoring" modules (like processes and network hardware stats) will monitor the underlying Vercel microVM container rather than a persistent Linux server. SQLite databases are also ephemeral on Vercel Serverless. For persistent system monitoring of a dedicated server, deploy via Docker, Google Cloud Run, or a traditional VPS (e.g., DigitalOcean, AWS EC2).*
 
 ## 📂 Project Structure
 
