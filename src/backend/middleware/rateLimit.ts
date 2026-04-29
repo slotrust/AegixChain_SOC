@@ -26,9 +26,6 @@ export const apiLimiter = rateLimit({
 export const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 5, // Limit each IP to 5 login requests per `window` (here, per 15 minutes)
-  skip: (req) => {
-    return req.ip === '::ffff:127.0.0.1' || req.ip === '::1' || req.ip === '127.0.0.1';
-  },
   handler: (req, res) => {
     let clientIp = req.ip || req.socket.remoteAddress || 'unknown';
     if (clientIp.startsWith('::ffff:')) {

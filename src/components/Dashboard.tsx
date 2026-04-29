@@ -252,27 +252,34 @@ export default function Dashboard({ onSelectLog, onInvestigate }: DashboardProps
             <PieChartIcon className="w-4 h-4 text-soc-purple" />
             Event Distribution
           </h3>
-          <div className="flex-1 min-h-[250px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={pieData}
-                  innerRadius={65}
-                  outerRadius={85}
-                  paddingAngle={5}
-                  dataKey="value"
-                  stroke="none"
-                >
-                  {pieData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                  ))}
-                </Pie>
-                <RechartsTooltip 
-                  contentStyle={{ backgroundColor: 'rgba(0, 0, 0, 0.9)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '8px' }}
-                  itemStyle={{ color: '#f3f4f6' }}
-                />
-              </PieChart>
-            </ResponsiveContainer>
+          <div className="flex-1 min-h-[250px] relative">
+            {pieData.length > 0 ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={pieData}
+                    innerRadius={65}
+                    outerRadius={85}
+                    paddingAngle={5}
+                    dataKey="value"
+                    stroke="none"
+                  >
+                    {pieData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <RechartsTooltip 
+                    contentStyle={{ backgroundColor: 'rgba(0, 0, 0, 0.9)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '8px' }}
+                    itemStyle={{ color: '#f3f4f6' }}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="absolute inset-0 flex flex-col items-center justify-center text-soc-muted">
+                <PieChartIcon className="w-8 h-8 mb-2 opacity-20" />
+                <span className="text-sm font-mono">No Event Data Yet</span>
+              </div>
+            )}
           </div>
           <div className="flex flex-wrap justify-center gap-3 mt-4">
             {pieData.map((entry, i) => (
