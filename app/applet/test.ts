@@ -1,0 +1,1 @@
+import { realSystemMonitor, cpuStatsCache } from './src/backend/services/real_system_monitor.js'; realSystemMonitor.start(); setTimeout(() => { console.log(cpuStatsCache.length); process.exit(0); }, 6000);

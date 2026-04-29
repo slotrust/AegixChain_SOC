@@ -241,10 +241,10 @@ export const realSystemMonitor = {
         let tx_bytes = 0;
 
         for (const iface of netData) {
-            rx_sec += iface.rx_sec || Math.random() * 50000; // Provide fake baseline if null so UI doesn't look dead locally
-            tx_sec += iface.tx_sec || Math.random() * 20000;
-            rx_bytes += iface.rx_bytes || 0;
-            tx_bytes += iface.tx_bytes || 0;
+            rx_sec += typeof iface.rx_sec === 'number' ? iface.rx_sec : 0;
+            tx_sec += typeof iface.tx_sec === 'number' ? iface.tx_sec : 0;
+            rx_bytes += typeof iface.rx_bytes === 'number' ? iface.rx_bytes : 0;
+            tx_bytes += typeof iface.tx_bytes === 'number' ? iface.tx_bytes : 0;
         }
 
         const newNetCache = {

@@ -293,6 +293,52 @@ export async function initDb() {
       )
     `);
 
+    // Seed Behavioral Baselines if empty
+    const baselineCount = db.prepare("SELECT COUNT(*) as count FROM behavioral_baselines").get().count;
+    if (baselineCount === 0) {
+      db.prepare(`
+        INSERT INTO behavioral_baselines (device_id, process_name, avg_cpu, std_cpu, avg_mem, std_mem, exec_count)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+      `).run('default', 'nginx', 2.5, 0.5, 45.0, 5.0, 100);
+      db.prepare(`
+        INSERT INTO behavioral_baselines (device_id, process_name, avg_cpu, std_cpu, avg_mem, std_mem, exec_count)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+      `).run('default', 'node', 15.0, 4.0, 120.0, 20.0, 45);
+      
+      db.prepare(`
+        INSERT INTO behavioral_anomalies (device_id, process_name, score, risk_level, explanation, process_data)
+        VALUES (?, ?, ?, ?, ?, ?)
+      `).run('default', 'powershell.exe', 0.85, 'High', 'Significant CPU deviation from baseline and uncommon execution.', JSON.stringify({ pid: 4920, cpu: 85.5 }));
+    }
+
+    // Seed Threat Memory if empty
+    const memoryCount = db.prepare("SELECT COUNT(*) as count FROM threat_memory").get().count;
+    if (memoryCount === 0) {
+      db.prepare(`
+        INSERT INTO threat_memory (threat_type, process_name, file_hash, ip_address, anomaly_score, risk_level, action_taken, agent_confidence, occurrences, user_feedback)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `).run('process', 'svchost.exe', 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855', '', 0.85, 'High', 'Blocked', 0.92, 12, 'malicious');
+
+      db.prepare(`
+        INSERT INTO threat_memory (threat_type, process_name, file_hash, ip_address, anomaly_score, risk_level, action_taken, agent_confidence, occurrences, user_feedback)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `).run('network', '', '', '185.199.108.153', 0.75, 'Medium', 'Logged', 0.88, 4, 'unreviewed');
+    }
+
+    // Seed MITRE Timeline if empty
+    const mitreCount = db.prepare("SELECT COUNT(*) as count FROM mitre_timeline").get().count;
+    if (mitreCount === 0) {
+      db.prepare(`
+        INSERT INTO mitre_timeline (tactic, technique_id, technique_name, confidence, description)
+        VALUES (?, ?, ?, ?, ?)
+      `).run('Execution', 'T1059', 'Command and Scripting Interpreter', 0.85, 'Suspicious usage of powershell.exe with encoded commands.');
+      
+      db.prepare(`
+        INSERT INTO mitre_timeline (tactic, technique_id, technique_name, confidence, description)
+        VALUES (?, ?, ?, ?, ?)
+      `).run('Defense Evasion', 'T1070', 'Indicator Removal on Host', 0.90, 'Attempted clearing of Windows Event Logs.');
+    }
+
     // Seed admin user if not exists
     const adminExists = db.prepare("SELECT * FROM users WHERE username = 'admin'").get();
     if (!adminExists) {

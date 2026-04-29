@@ -44,8 +44,10 @@ ${JSON.stringify(mitreTimeline, null, 2)}
     
     // Set up LLM
     const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey) {
-      throw new Error('GEMINI_API_KEY not set.');
+    if (!apiKey || apiKey === 'undefined' || apiKey === '') {
+       return res.json({ 
+          response: "SYSTEM NOTE: AI integration is currently offline due to missing API Key. Please verify your environment configuration or continue to operate in fallback mode. The issue with process '" + (req.body.contextData?.process_name || 'unknown') + "' can be managed manually in the EDR panel."
+       });
     }
     const ai = new GoogleGenAI({ apiKey });
 

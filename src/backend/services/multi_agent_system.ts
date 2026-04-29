@@ -186,19 +186,33 @@ class MultiAgentSystem extends EventEmitter {
       }
 
       // If suspicious, pass to LLM Agent for deep analysis
-      if (anomalyScore >= 0.5) {
+      if (anomalyScore >= 0.5 || data.is_suspicious) {
         this.dispatchMessage({
           id: `msg-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
           timestamp: new Date().toISOString(),
           source: 'Analyst',
           target: 'LLM',
-          confidence: Math.min(1, anomalyScore),
+          confidence: Math.min(1, anomalyScore || 0.6),
           payload: { 
             eventData: msg.payload,
-            findings,
-            riskLevel: anomalyScore >= 0.8 ? 'High' : 'Medium',
+            findings: findings.length > 0 ? findings : ["Suspicious process keywords found."],
+            riskLevel: anomalyScore >= 0.8 ? 'High' : (anomalyScore >= 0.5 ? 'Medium' : 'Low'),
             memoryContext,
             mitreContext
+          }
+        });
+      } else {
+        // Send normal behavioral events to Broadcast to keep UI live feed rolling
+        this.dispatchMessage({
+          id: `msg-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
+          timestamp: new Date().toISOString(),
+          source: 'Analyst',
+          target: 'Broadcast',
+          confidence: Math.max(0, anomalyScore || 0.1),
+           payload: { 
+            eventData: msg.payload,
+            findings: ["Process within normal behavioral parameters."],
+            riskLevel: 'Low'
           }
         });
       }
@@ -222,14 +236,22 @@ Provide a concise human-readable explanation and a recommended action (Block, Is
 Format strictly as JSON: {"explanation": "...", "recommended_action": "..."}
 `;
         
-        // Use Gemini API
-        const response = await this.ai.models.generateContent({
-           model: 'gemini-3-flash-preview',
-           contents: prompt
-        });
+        let result;
+        if (!process.env.GEMINI_API_KEY || process.env.GEMINI_API_KEY === 'undefined' || process.env.GEMINI_API_KEY === '') {
+           result = {
+              explanation: "Local Mode Fallback: Suspected deviation based on behavioral signatures and runtime statistics.",
+              recommended_action: riskLevel === 'High' ? "Block" : "Notify"
+           };
+        } else {
+            // Use Gemini API
+            const response = await this.ai.models.generateContent({
+               model: 'gemini-3-flash-preview',
+               contents: prompt
+            });
 
-        const textObj = response.text?.replace(/```json/g, '').replace(/```/g, '') || '{}';
-        const result = JSON.parse(textObj);
+            const textObj = response.text?.replace(/```json/g, '').replace(/```/g, '') || '{}';
+            result = JSON.parse(textObj);
+        }
 
         this.dispatchMessage({
           id: `msg-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,

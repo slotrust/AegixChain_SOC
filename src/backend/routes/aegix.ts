@@ -12,7 +12,12 @@ router.post("/qwen-advice", authMiddleware, async (req, res) => {
       return res.status(400).json({ error: "No prompt provided" });
     }
 
-    const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+    let apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey || apiKey === 'undefined' || apiKey === '') {
+        return res.json({ advice: "SYSTEM OFFLINE OR NO API KEY PROVIDED: AI Analysis unavailable. Please review attached context. Fallback advice: Rotate affected credentials and isolate network segments until telemetry is manually verified." });
+    }
+
+    const ai = new GoogleGenAI({ apiKey });
 
     const instructions = "You are an expert cybersecurity advisor consulting with the Aegix AI. Provide expert security scanning help, diagnosis, and technical advice to complex situations. You are analytical, concise, and highly technical. You must have the reasoning logic and explicit instructions to resolve issues when there is an emergency zero-day attack or malware, even if the system has been taken over by the attacker and no custom instructions are present. Prioritize the protection of data. Never output any logs that could be manipulated by the attacker.";
     
