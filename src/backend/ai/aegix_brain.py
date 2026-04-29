@@ -385,6 +385,7 @@ class LayerHardener:
     def __init__(self):
         self.layer1_misses = []
         self.sigma_rules_generated = 0
+        self.last_rule_time = 0
 
     def record_miss(self, event: Dict[str, Any]):
         now = time.time()
@@ -392,7 +393,11 @@ class LayerHardener:
         # Clean up old misses (> 10 mins)
         self.layer1_misses = [t for t in self.layer1_misses if now - t <= 600]
 
+        if now - self.last_rule_time < 60: # Limit one rule per minute
+            return None
+
         if len(self.layer1_misses) > 3 or event.get("severity") == "Critical":
+            self.last_rule_time = now
             return self.trigger_retraining(event)
         return None
 
