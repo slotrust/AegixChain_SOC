@@ -184,7 +184,7 @@ class EDRService {
   public async scanVulnerabilities(): Promise<any[]> {
      return new Promise((resolve, reject) => {
          // Runs an actual npm audit on the system environment using npx to ensure it runs
-         const proc = spawn('npx', ['-y', 'npm@latest', 'audit', '--json'], { cwd: process.cwd() });
+         const proc = spawn('npm', ['audit', '--json'], { cwd: process.cwd(), shell: true });
          let output = '';
          
          proc.on('error', (err) => {
@@ -397,7 +397,7 @@ After using all required tools, respond with:
         }
         
         // Execute ACTUAL Deep Patching (Real resolution)
-        spawnSync('npx', ['-y', 'npm@latest', 'install', `${pkg}@latest`], { cwd: process.cwd(), stdio: 'inherit' });
+        spawnSync('npm', ['install', `${pkg}@latest`], { cwd: process.cwd(), stdio: 'inherit', shell: true });
 
         setTimeout(() => {
            const report: PatchReport = {
@@ -587,7 +587,7 @@ Please provide your response in JSON format exactly like this:
                   config: { responseMimeType: "application/json" }
                 });
                 
-                const responseJson = JSON.parse(response.text() || "{}");
+                const responseJson = JSON.parse(response.text || "{}");
                 if (responseJson.analysis) aiAnalysisResult = responseJson.analysis;
                 if (responseJson.mitigation) aiMitigation = responseJson.mitigation;
             } catch (err) {
