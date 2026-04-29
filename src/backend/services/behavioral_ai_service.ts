@@ -7,7 +7,7 @@ import { GoogleGenAI } from "@google/genai";
 // Use statistical thresholding (EWMA) to find anomalies in processes and create baselines
 export const behavioralAiService = {
   // A mode toggle
-  isLearningMode: false,
+  isLearningMode: true,
   
   setLearningMode(val: boolean) {
     this.isLearningMode = val;
@@ -57,13 +57,13 @@ export const behavioralAiService = {
           VALUES (?, ?, ?, 0.1, ?, 0.1, 1)
         `).run(deviceId, processName, cpu, mem);
       }
-      return; // In learning mode, do not alert
+      // Continue to protection mode even if we just learned it
     }
 
     // Protection Mode
     if (!baseline) {
       // Unseen process!
-      await this.flagAnomaly(deviceId, processName, details, 0.8, 'High', `Process ${processName} has never been seen during learning phase.`);
+      await this.flagAnomaly(deviceId, processName, details, 0.8, 'High', `Process ${processName} has never been seen on this baseline.`);
       return;
     }
 

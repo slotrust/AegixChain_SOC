@@ -159,6 +159,10 @@ class MultiAgentSystem extends EventEmitter {
       if (mitreMapping) {
          mitreContext = mitreMapping;
          findings.push(`MITRE ATT&CK Pattern matched: \${mitreMapping.technique_name} (\${mitreMapping.tactic}) with \${Math.round(mitreMapping.confidence * 100)}% confidence.`);
+         
+         // Save to MITRE Timeline immediately to ensure visibility in UI for pattern recognition
+         mitreService.saveMitreEvent(null, mitreMapping);
+
          if (mitreMapping.tactic === 'Execution' || mitreMapping.tactic === 'Lateral Movement' || mitreMapping.tactic === 'Persistence') {
            anomalyScore += 0.3; // High risk tactics boost score
          }
