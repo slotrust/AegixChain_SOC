@@ -14,6 +14,47 @@ export let networkCache: any[] = [];
 export let cpuStatsCache: any[] = [];
 export let networkStatsCache: any[] = [];
 
+class ProcessAnomalyEngine {
+  private baselines: Map<string, { cpuEma: number, memEma: number, cpuVar: number, memVar: number, count: number }> = new Map();
+  private alpha = 0.2; // EWMA decay factor
+
+  public analyze(name: string, cpu: number, mem: number): { isAnomaly: boolean, zScoreCpu: number, zScoreMem: number, details: string } {
+    if (!this.baselines.has(name)) {
+      this.baselines.set(name, { cpuEma: cpu, memEma: mem, cpuVar: 1, memVar: 1, count: 1 });
+      return { isAnomaly: false, zScoreCpu: 0, zScoreMem: 0, details: '' };
+    }
+
+    const stats = this.baselines.get(name)!;
+    stats.count++;
+
+    const cpuStdDev = Math.sqrt(stats.cpuVar || 1);
+    const memStdDev = Math.sqrt(stats.memVar || 1);
+    
+    const zScoreCpu = (cpu - stats.cpuEma) / cpuStdDev;
+    const zScoreMem = (mem - stats.memEma) / memStdDev;
+
+    // Update EWMA Variance and Mean
+    stats.cpuVar = (1 - this.alpha) * (stats.cpuVar + this.alpha * Math.pow(cpu - stats.cpuEma, 2)) || 1;
+    stats.memVar = (1 - this.alpha) * (stats.memVar + this.alpha * Math.pow(mem - stats.memEma, 2)) || 1;
+    
+    stats.cpuEma = (this.alpha * cpu) + ((1 - this.alpha) * stats.cpuEma);
+    stats.memEma = (this.alpha * mem) + ((1 - this.alpha) * stats.memEma);
+
+    const isAnomaly = stats.count > 10 && (Math.abs(zScoreCpu) > 3.0 || Math.abs(zScoreMem) > 3.0);
+    
+    let details = '';
+    if (isAnomaly) {
+        details = `Statistical Anomaly (EWMA): `;
+        if (Math.abs(zScoreCpu) > 3.0) details += `CPU Z-Score ${zScoreCpu.toFixed(1)} `;
+        if (Math.abs(zScoreMem) > 3.0) details += `MEM Z-Score ${zScoreMem.toFixed(1)}`;
+    }
+
+    return { isAnomaly, zScoreCpu, zScoreMem, details };
+  }
+}
+
+const anomalyEngine = new ProcessAnomalyEngine();
+
 export const realSystemMonitor = {
   start: () => {
     
@@ -41,9 +82,10 @@ export const realSystemMonitor = {
             const suspiciousRegex = /\b(nc|nmap|miner|exploit|reverse|meterpreter|beacon|cobalt|malware|keylogger|ncat|reverse_shell|base64)\b/i;
             const isSuspicious = suspiciousRegex.test(name) || suspiciousRegex.test(cmdline);
             const isDevCommand = /\b(vite|node|tsx|npm|python|python3|concurrently|sh|ps|bash|grep|cat|ls|npx|systeminformation)\b/i.test(cmdline) || /\b(vite|node|tsx|npm|python|python3|concurrently|sh|ps|bash)\b/i.test(name);
-            const flagged = isSuspicious && !isDevCommand;
+            const { isAnomaly, details: anomalyDetails } = anomalyEngine.analyze(name, cpu, mem);
+            const flagged = (isSuspicious && !isDevCommand) || isAnomaly;
 
-            const details = { pid, name, cpu_percent: cpu, memory_usage: mem, exe_path: name, cmdline, user, status, timestamp: new Date().toISOString(), is_suspicious: flagged ? 1 : 0 };
+            const details = { pid, name, cpu_percent: cpu, memory_usage: mem, exe_path: name, cmdline: cmdline + (isAnomaly ? ` | ${anomalyDetails}` : ''), user, status, timestamp: new Date().toISOString(), is_suspicious: flagged ? 1 : 0 };
             newCache.push(details);
             let shouldSendToAi = flagged;
             if (!flagged && Math.random() < 0.05) { // 5% chance to send normal process for baseline analysis
@@ -73,7 +115,8 @@ export const realSystemMonitor = {
               const suspiciousRegex = /\b(nc|nmap|miner|exploit|reverse|meterpreter|beacon|cobalt|malware|keylogger|ncat|reverse_shell|base64)\b/i;
               const isSuspicious = suspiciousRegex.test(name) || suspiciousRegex.test(cmdline);
               const isDevCommand = /\b(vite|node|tsx|npm|python|python3|concurrently|sh|ps|bash|grep|cat|ls|npx|systeminformation)\b/i.test(cmdline) || /\b(vite|node|tsx|npm|python|python3|concurrently|sh|ps|bash)\b/i.test(name);
-              const flagged = isSuspicious && !isDevCommand;
+              const { isAnomaly, details: anomalyDetails } = anomalyEngine.analyze(name, cpu, mem);
+              const flagged = (isSuspicious && !isDevCommand) || isAnomaly;
               
               const details = {
                   pid,
@@ -81,7 +124,7 @@ export const realSystemMonitor = {
                   cpu_percent: cpu,
                   memory_usage: mem,
                   exe_path: name,
-                  cmdline,
+                  cmdline: cmdline + (isAnomaly ? ` | ${anomalyDetails}` : ''),
                   user,
                   status: status,
                   timestamp: new Date().toISOString(),

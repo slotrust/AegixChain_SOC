@@ -38,7 +38,7 @@ async function startServer() {
   const PORT = 3000;
 
   // Trust proxy for rate limiting in Cloud Run/Proxied environments
-  app.set('trust proxy', ['loopback', 'linklocal', 'uniquelocal']);
+  app.set('trust proxy', 1);
 
   app.use(cors());
   app.use(express.json());

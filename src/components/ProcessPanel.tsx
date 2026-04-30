@@ -3,6 +3,7 @@ import { usePolling } from '../hooks/usePolling';
 import { api } from '../api/client';
 import { Activity, AlertTriangle, Search, ArrowUpDown, X, ShieldAlert, Cpu } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import YaraScanner from './YaraScanner';
 
 export default function ProcessPanel() {
   const { data: processes, loading } = usePolling(() => api.getProcesses(), 3000);
@@ -309,6 +310,8 @@ export default function ProcessPanel() {
                         {selectedAnalysis.mitigation}
                       </div>
                     </div>
+
+                    <YaraScanner targetPath={processes?.find((p: any) => p.pid === selectedAnalysis.pid)?.exe_path || 'Unknown'} />
                   </>
                 )}
               </div>

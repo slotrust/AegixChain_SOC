@@ -17,7 +17,7 @@ async function run() {
         let body = "";
         res.on("data", d => body += d);
         res.on("end", () => {
-          console.log(`Status: ${res.statusCode} Headers: ${JSON.stringify(res.headers)}`);
+          console.log(`Status: ${res.statusCode}`);
           resolve();
         });
       });
