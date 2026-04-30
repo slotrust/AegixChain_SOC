@@ -1,5 +1,6 @@
 import { StateGraph, END, START } from "@langchain/langgraph";
 import { GoogleGenAI } from "@google/genai";
+import OpenAI from "openai";
 import { z } from "zod";
 import { mitreService } from './mitre_service.js';
 
@@ -35,9 +36,35 @@ const graphState = {
 };
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+const nvidiaClient = new OpenAI({
+  apiKey: process.env.NVIDIA_API_KEY || "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",
+  baseURL: "https://integrate.api.nvidia.com/v1",
+});
+
+async function generateWithFallback(prompt: string): Promise<string> {
+  try {
+    if (process.env.GEMINI_API_KEY && process.env.GEMINI_API_KEY !== 'undefined') {
+      const res = await ai.models.generateContent({
+        model: 'gemini-2.5-flash',
+        contents: prompt
+      });
+      return res.text || "";
+    } else {
+      throw new Error("Gemini API Key missing");
+    }
+  } catch (err) {
+    console.log("Falling back to NVIDIA LLM for Analyst Agent inference...");
+    const res = await nvidiaClient.chat.completions.create({
+      model: "meta/llama3-70b-instruct",
+      messages: [{ role: "user", content: prompt }],
+      max_tokens: 1024,
+      temperature: 0.2
+    });
+    return res.choices[0]?.message?.content || "";
+  }
+}
 
 async function correlateEventsNode(state: AnalystAgentState): Promise<Partial<AnalystAgentState>> {
-  // Use LLM to correlate events into an attack chain
   if (!state.raw_events || state.raw_events.length === 0) return {};
   
   const prompt = `You are a Tier 3 SOC Analyst. Correlate these disparate events into a potential attack chain if they are related. 
@@ -46,11 +73,8 @@ Output a JSON list of the events that form a coherent attack chain. If none, out
 Reply ONLY with valid JSON.`;
   
   try {
-     const res = await ai.models.generateContent({
-        model: 'gemini-2.5-flash',
-        contents: prompt
-     });
-     let text = res.text?.replace(/```json/g, '').replace(/```/g, '').trim() || "[]";
+     const textObj = await generateWithFallback(prompt);
+     let text = textObj.replace(/```json/g, '').replace(/```/g, '').trim() || "[]";
      const chain = JSON.parse(text);
      return { correlated_chain: Array.isArray(chain) ? chain : [] };
   } catch (e) {
@@ -68,17 +92,13 @@ async function mapMitreNode(state: AnalystAgentState): Promise<Partial<AnalystAg
      if (mapped) mappings.push(mapped);
   }
   
-  // Also ask LLM for high level mappings
   const prompt = `Map these sequential attack chain events to MITRE ATT&CK tactics and techniques.
 Chain: ${JSON.stringify(chain)}
 Output JSON: [{ "tactic": "...", "technique_name": "...", "technique_id": "..." }]`;
   
   try {
-     const res = await ai.models.generateContent({
-        model: 'gemini-2.5-flash',
-        contents: prompt
-     });
-     let text = res.text?.replace(/```json/g, '').replace(/```/g, '').trim() || "[]";
+     const textObj = await generateWithFallback(prompt);
+     let text = textObj.replace(/```json/g, '').replace(/```/g, '').trim() || "[]";
      const additionalMappings = JSON.parse(text);
      return { mitre_mappings: [...mappings, ...(Array.isArray(additionalMappings) ? additionalMappings : [])] };
   } catch (e) {
@@ -88,7 +108,7 @@ Output JSON: [{ "tactic": "...", "technique_name": "...", "technique_id": "..." 
 
 async function explainAndRespondNode(state: AnalystAgentState): Promise<Partial<AnalystAgentState>> {
    const prompt = `You are a high-reasoning Security Analyst Agent.
-Analyze the following attack chain and MITRE mappings, and explain the complex attack path to a human operator. Also recommend a response action (Block, Isolate, Notify, Ignore).
+Analyze the following attack chain and MITRE mappings, and explain the complex attack path to a human operator. Also recommend a response action (Block, Isolate, Notify, Ignore, Deploy_Honeypot).
 Attack Chain: ${JSON.stringify(state.correlated_chain)}
 MITRE Mappings: ${JSON.stringify(state.mitre_mappings)}
 
@@ -99,11 +119,8 @@ Output JSON ONLY:
 }`;
 
   try {
-     const res = await ai.models.generateContent({
-        model: 'gemini-2.5-flash',
-        contents: prompt
-     });
-     let text = res.text?.replace(/```json/g, '').replace(/```/g, '').trim() || "{}";
+     const textObj = await generateWithFallback(prompt);
+     let text = textObj.replace(/```json/g, '').replace(/```/g, '').trim() || "{}";
      const parsed = JSON.parse(text);
      return { 
         explanation: parsed.explanation || "Failed to analyze.",

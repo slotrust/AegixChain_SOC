@@ -226,30 +226,21 @@ class MultiAgentSystem extends EventEmitter {
       const { eventData, findings, riskLevel, memoryContext, mitreContext } = msg.payload;
 
       try {
-        let result: any = {};
+        const { compiledAnalystAgent } = await import('./analyst_agent.js');
+        // Invoke LangGraph Analyst Agent
+        const graphResult = await compiledAnalystAgent.invoke({
+           raw_events: [eventData],
+           correlated_chain: [],
+           mitre_mappings: mitreContext ? [mitreContext] : [],
+           explanation: "",
+           recommended_action: "None"
+        });
         
-        if (!process.env.GEMINI_API_KEY || process.env.GEMINI_API_KEY === 'undefined' || process.env.GEMINI_API_KEY === '') {
-           result = {
-              explanation: "Local Mode Fallback: Suspected deviation based on behavioral signatures and runtime statistics.",
-              recommended_action: riskLevel === 'High' ? "Block" : "Notify"
-           };
-        } else {
-             const { compiledAnalystAgent } = await import('./analyst_agent.js');
-             // Invoke LangGraph Analyst Agent
-             const graphResult = await compiledAnalystAgent.invoke({
-                raw_events: [eventData],
-                correlated_chain: [],
-                mitre_mappings: mitreContext ? [mitreContext] : [],
-                explanation: "",
-                recommended_action: "None"
-             });
-             
-             result = {
-                explanation: graphResult.explanation,
-                recommended_action: graphResult.recommended_action,
-                mitre_mappings: graphResult.mitre_mappings
-             };
-        }
+        const result = {
+           explanation: graphResult.explanation,
+           recommended_action: graphResult.recommended_action,
+           mitre_mappings: graphResult.mitre_mappings
+        };
 
         this.dispatchMessage({
           id: `msg-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
