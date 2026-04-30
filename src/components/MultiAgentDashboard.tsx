@@ -5,9 +5,14 @@ import { motion, AnimatePresence } from 'motion/react';
 import { Network, Database, Brain, Sparkles, Shield, Activity, Share2 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 
-export default function MultiAgentDashboard() {
+export default function MultiAgentDashboard({ isActive = true }: { isActive?: boolean }) {
   const [history, setHistory] = useState<any[]>([]);
   const [eventStream, setEventStream] = useState<EventSource | null>(null);
+  const isActiveRef = React.useRef(isActive);
+
+  useEffect(() => {
+    isActiveRef.current = isActive;
+  }, [isActive]);
 
   useEffect(() => {
     fetchHistory();
@@ -23,10 +28,13 @@ export default function MultiAgentDashboard() {
       try {
         const msg = JSON.parse(event.data);
         setHistory(prev => [msg, ...prev].slice(0, 100));
-        toast.success(`Agent ${msg.source} sent message to ${msg.target}!`, {
-            icon: '🤖',
-            duration: 2000
-        });
+        
+        if (isActiveRef.current) {
+          toast.success(`Agent ${msg.source} sent message to ${msg.target}!`, {
+              icon: '🤖',
+              duration: 2000
+          });
+        }
       } catch(e) {}
     };
 

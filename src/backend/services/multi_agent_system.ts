@@ -247,7 +247,7 @@ class MultiAgentSystem extends EventEmitter {
       const { recommended_action, explanation, riskLevel, eventData, mitreContext } = msg.payload;
 
       // 1. RL Agent override / consensus
-      const rlRecommended = rlAgent.decideAction(riskLevel, eventData.type || 'unknown');
+      const rlRecommended = await rlAgent.decideActionAsync(riskLevel, eventData.type || 'unknown');
       
       let finalDecision = recommended_action;
       let actionTaken = 'None';

@@ -21,10 +21,9 @@ export const systemService = {
       const features = [
          Math.min(details.cpu_percent || 0, 100) / 100.0,
          Math.min(details.memory_usage || 0, 100) / 100.0,
-         details.name?.length || 0,
-         details.cmdline?.length || 0,
-         details.pid > 1000 ? 1.0 : 0.0,
-         0, 0, 0, 0, 0
+         Math.min(details.name?.length || 0, 100) / 100.0,
+         Math.min(details.cmdline?.length || 0, 255) / 255.0,
+         details.pid > 1000 ? 1.0 : 0.0
       ];
       
       let mlRiskScore = risk_score;
@@ -81,9 +80,10 @@ export const systemService = {
       // Network Agent (traffic anomalies) -> Uses ML (Isolation Forest / MLP), NOT LLM
       const features = [
          details.status === 'ESTABLISHED' ? 1.0 : 0.0,
-         (details.remote_address?.split('.').map((x: string) => parseInt(x)).reduce((a:number,b:number)=>a+b, 0) || 0) / 1024.0, // pseudo
-         0, 0, Math.random(), 
-         0, 0, 0, 0, 0
+         Math.min((details.remote_address?.length || 0), 20) / 20.0,
+         Math.min(details.pid || 0, 10000) / 10000.0,
+         Math.random(), 
+         0.5
       ];
       let mlRiskScore = risk_score;
       let mlFlagged = flagged;
@@ -130,9 +130,8 @@ export const systemService = {
          isExecutable ? 1.0 : 0.0,
          isCriticalDir ? 1.0 : 0.0,
          details.event_type === 'File Modified' ? 0.8 : 0.2, // Modify is riskier for critical files usually
-         (details.file_path?.length || 0) / 100.0,
-         Math.random(), 
-         0, 0, 0, 0, 0
+         Math.min((details.file_path?.length || 0), 100) / 100.0,
+         0.5
       ];
       
       let mlRiskScore = risk_score;

@@ -27,6 +27,11 @@ export const ipsService = {
       const rows = db.prepare("SELECT ip FROM blocked_ips WHERE expires_at IS NULL OR expires_at > datetime('now')").all() as { ip: string }[];
       rows.forEach(row => blockedIpsCache.add(row.ip));
       console.log(`[IPS] Loaded ${blockedIpsCache.size} blocked IPs from database.`);
+
+      // Periodic check every minute to auto-unblock expired IPs
+      setInterval(() => {
+        ipsService.cleanupExpiredBlocks();
+      }, 60 * 1000);
     } catch (err) {
       console.error("[IPS] Failed to load blocked IPs on startup:", err);
     }

@@ -35,16 +35,17 @@ export const correlationService = {
   },
 
   trainDLModelBackground: () => {
-     // Naive background trainer for isolation forest every ~100 events
-     if (Math.random() < 0.05) {
-         try {
-           const evts = db.prepare(`SELECT * FROM normalized_events ORDER BY id DESC LIMIT 200`).all();
-           if (evts.length > 50) {
-               const vectors = evts.map(e => correlationService.extractFeatures([e]));
-               dlAnomalyEngine.trainIForest(vectors);
-           }
-         } catch(e) {}
-     }
+      // Naive background trainer for isolation forest every ~100 events
+      if (Math.random() < 0.05) {
+          try {
+            const evts = db.prepare(`SELECT * FROM normalized_events ORDER BY id DESC LIMIT 200`).all();
+            if (evts.length > 50) {
+                const vectors = evts.map(e => correlationService.extractFeatures([e]));
+                dlAnomalyEngine.trainIForest(vectors);
+                dlAnomalyEngine.trainPPO();
+            }
+          } catch(e) {}
+      }
   },
 
   // Extract a 10-dimensional feature vector for DL inference

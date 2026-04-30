@@ -134,7 +134,8 @@ class EDRService {
         }
 
         const ext = path.extname(targetPath).toLowerCase();
-        const suspiciousExts = ['.exe', '.sh', '.elf', '.php', '.bat', '.cmd', '.dll', '.bin'];
+        const suspiciousExts = ['.exe', '.dll', '.elf', '.sh', '.php', '.bat', '.cmd', '.bin', '.py'];
+        const yaraTargetExts = ['.exe', '.dll', '.elf', '.sh', '.py'];
         
         // Basic heuristic
         const isExecutableFlag = !!(stats.mode & fs.constants.S_IXUSR);
@@ -144,25 +145,36 @@ class EDRService {
         let score = Math.floor(Math.random() * 20) + 1; // 1-20
         let details = "Structural analysis complete. No malicious payloads or polymorphic signatures detected.";
 
-        // Execute Yara scan
+        // Execute Yara scan only for executable targets
         let yaraMatches: string[] = [];
-        try {
-            const yaraProc = spawnSync('python3', [path.join(process.cwd(), 'src/backend/ai/yara_tool.py'), targetPath], { encoding: 'utf-8' });
-            if (yaraProc.stdout) {
-               yaraMatches = JSON.parse(yaraProc.stdout.trim());
+        let yaraAttempted = false;
+        
+        if (yaraTargetExts.includes(ext) || isExecutableFlag) {
+            yaraAttempted = true;
+            try {
+                const yaraProc = spawnSync('python3', [path.join(process.cwd(), 'src/backend/ai/yara_tool.py'), targetPath], { encoding: 'utf-8' });
+                if (yaraProc.stdout) {
+                   yaraMatches = JSON.parse(yaraProc.stdout.trim());
+                }
+            } catch (e) {
+                console.error("Yara execution failed:", e);
             }
-        } catch (e) {
         }
 
         if (isSuspicious || yaraMatches.length > 0) {
           classification = "Malicious";
           score = Math.floor(Math.random() * 15) + 85; // 85-99
           details = "Heuristic flag triggered or YARA rules matched: Suspicious execution characteristics identified. ";
+          if (yaraAttempted && yaraMatches.length === 0) {
+              details += "YARA scan completed: Clean. ";
+          }
           if (yaraMatches.length > 0) {
             details += `Deep File System YARA matches found: ${yaraMatches.join(', ')}.`;
           } else {
             details += `Extension: '${ext || 'none'}', Execution bit set: ${isExecutableFlag}.`;
           }
+        } else if (yaraAttempted && yaraMatches.length === 0) {
+            details += " YARA deep scan completed: Clean.";
         }
         
         resolve({

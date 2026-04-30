@@ -10,7 +10,7 @@ import ThreatMemory from './ThreatMemory';
 import MitreAttackChain from './MitreAttackChain';
 import CrossLayerCorrelation from './CrossLayerCorrelation';
 
-export default function AegixBrain() {
+export default function AegixBrain({ isActive = true }: { isActive?: boolean }) {
   const { data: history } = usePolling(() => api.getAegixHistory(), 2000);
   const [selectedReport, setSelectedReport] = React.useState<string | null>(null);
   const [isHackerMode, setIsHackerMode] = React.useState(false);
@@ -62,7 +62,7 @@ export default function AegixBrain() {
 
       {/* Multi-Agent & Behavioral Engine Layers */}
       <div className="space-y-12">
-        <MultiAgentDashboard />
+        <MultiAgentDashboard isActive={isActive} />
         <div className="h-px bg-soc-border/50 shrink-0"></div>
         <CrossLayerCorrelation />
         <div className="h-px bg-soc-border/50 shrink-0"></div>
