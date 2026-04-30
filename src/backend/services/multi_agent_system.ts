@@ -7,6 +7,7 @@ import { mitreService } from './mitre_service.js';
 import { correlationService } from './correlation_service.js';
 import { db } from '../database.js';
 import { GoogleGenAI } from '@google/genai';
+import { rlAgent } from './rl_agent.js';
 
 
 export interface AgentMessage {
@@ -219,38 +220,35 @@ class MultiAgentSystem extends EventEmitter {
     });
   }
 
-  // 3. LLM Agent (🤖)
+  // 3. LLM Agent (🤖) -> Using LangGraph
   private setupLLMAgent() {
     this.on('target_LLM', async (msg: AgentMessage) => {
       const { eventData, findings, riskLevel, memoryContext, mitreContext } = msg.payload;
 
       try {
-        const prompt = `As the Aegix LLM Agent, analyze this security event.
-Event: \${JSON.stringify(eventData)}
-Findings: \${findings.join("; ")}
-Risk Level: \${riskLevel}
-Historical Context: \${memoryContext ? JSON.stringify(memoryContext) : 'None'}
-MITRE ATT&CK Context: \${mitreContext ? JSON.stringify(mitreContext) : 'None'}
-
-Provide a concise human-readable explanation and a recommended action (Block, Isolate, Notify, Ignore).
-Format strictly as JSON: {"explanation": "...", "recommended_action": "..."}
-`;
+        let result: any = {};
         
-        let result;
         if (!process.env.GEMINI_API_KEY || process.env.GEMINI_API_KEY === 'undefined' || process.env.GEMINI_API_KEY === '') {
            result = {
               explanation: "Local Mode Fallback: Suspected deviation based on behavioral signatures and runtime statistics.",
               recommended_action: riskLevel === 'High' ? "Block" : "Notify"
            };
         } else {
-            // Use Gemini API
-            const response = await this.ai.models.generateContent({
-               model: 'gemini-3-flash-preview',
-               contents: prompt
-            });
-
-            const textObj = response.text?.replace(/```json/g, '').replace(/```/g, '') || '{}';
-            result = JSON.parse(textObj);
+             const { compiledAnalystAgent } = await import('./analyst_agent.js');
+             // Invoke LangGraph Analyst Agent
+             const graphResult = await compiledAnalystAgent.invoke({
+                raw_events: [eventData],
+                correlated_chain: [],
+                mitre_mappings: mitreContext ? [mitreContext] : [],
+                explanation: "",
+                recommended_action: "None"
+             });
+             
+             result = {
+                explanation: graphResult.explanation,
+                recommended_action: graphResult.recommended_action,
+                mitre_mappings: graphResult.mitre_mappings
+             };
         }
 
         this.dispatchMessage({
@@ -261,7 +259,8 @@ Format strictly as JSON: {"explanation": "...", "recommended_action": "..."}
           payload: {
             ...msg.payload,
             explanation: result.explanation,
-            recommended_action: result.recommended_action
+            recommended_action: result.recommended_action,
+            mitre_mappings: result.mitre_mappings
           }
         });
       } catch (err) {
@@ -273,7 +272,7 @@ Format strictly as JSON: {"explanation": "...", "recommended_action": "..."}
           target: 'Response',
           payload: {
             ...msg.payload,
-            explanation: "LLM synthesis failed. Proceeding with raw findings: " + findings.join("; "),
+            explanation: "LangGraph LLM Engine synthesis failed. Proceeding with raw findings: " + findings.join("; "),
             recommended_action: "Notify"
           }
         });
@@ -286,9 +285,18 @@ Format strictly as JSON: {"explanation": "...", "recommended_action": "..."}
     this.on('target_Response', async (msg: AgentMessage) => {
       const { recommended_action, explanation, riskLevel, eventData, mitreContext } = msg.payload;
 
+      // 1. RL Agent override / consensus
+      const rlRecommended = rlAgent.decideAction(riskLevel, eventData.type || 'unknown');
+      
+      let finalDecision = recommended_action;
       let actionTaken = 'None';
+      
+      // If LLM says "Notify" but RL learned to "Block" for High risk, RL takes precedence for autonomous defense
+      if (rlRecommended === 'Block' && riskLevel === 'High') {
+         finalDecision = 'Block';
+      }
 
-      if (recommended_action?.includes('Block') || recommended_action?.includes('Isolate')) {
+      if (finalDecision?.includes('Block') || finalDecision?.includes('Isolate')) {
         // In this real environment, we log the block action
         // Could also integrate with ipsService if it's an IP
         if (eventData.type === 'network' && eventData.data.remote_ip) {
@@ -296,10 +304,25 @@ Format strictly as JSON: {"explanation": "...", "recommended_action": "..."}
             actionTaken = `Blocked IP ${eventData.data.remote_ip}`;
         } else {
             actionTaken = `Blocked Process ${eventData.data?.name}`;
+            if (eventData.type === 'process' && eventData.data?.exe_path) {
+                ipsService.quarantineFile(eventData.data.exe_path);
+                actionTaken += ` and Quarantined Binary`;
+            }
         }
-      } else if (recommended_action?.includes('Notify')) {
+      } else if (finalDecision?.includes('Deploy_Honeypot')) {
+            actionTaken = `Deployed Deception Layer for ${eventData.data?.remote_ip || eventData.data?.name || 'Local System'}`;
+      } else {
         actionTaken = 'User Notified';
       }
+
+      // Reinforcement Learning: Reward function computation (Simple heuristic)
+      let reward = 0;
+      if (actionTaken.includes('Block') && riskLevel === 'High') reward = 1.0; 
+      if (actionTaken.includes('Block') && riskLevel === 'Low') reward = -1.0; // False positive penalty
+      if (actionTaken.includes('Notify') && riskLevel === 'High') reward = -0.5; // Too passive
+      if (actionTaken.includes('Notify') && riskLevel === 'Low') reward = 0.5; // Good passive
+      
+      rlAgent.learn(riskLevel, eventData.type || 'unknown', finalDecision, reward);
 
       // Add to Threat Memory Store
       memoryService.addThreat({

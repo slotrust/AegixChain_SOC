@@ -1,9 +1,24 @@
 import { db } from "../database.js";
+import fs from "fs";
 
 // In-memory cache for fast lookups
 const blockedIpsCache = new Set<string>();
 
 export const ipsService = {
+  quarantineFile: (filePath: string) => {
+    try {
+      if (fs.existsSync(filePath)) {
+        // Absolute quarantine: strip execution and write permissions, only readable by owner
+        fs.chmodSync(filePath, 0o400); 
+        console.log(`[EDR] Absolute Quarantine Applied: Permission stripped for ${filePath}`);
+        return true;
+      }
+    } catch(err) {
+      console.error(`[EDR] Failed to quarantine file ${filePath}:`, err);
+    }
+    return false;
+  },
+
   init: () => {
     try {
       // First, clean up expired IPs

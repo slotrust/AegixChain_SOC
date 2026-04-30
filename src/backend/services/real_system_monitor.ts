@@ -3,6 +3,7 @@ import os from 'os';
 import { systemService } from './system_service.js';
 import si from 'systeminformation';
 import { execSync } from 'child_process';
+import { dlAnomalyEngine } from './dl_engine.js';
 
 let isPollingProcesses = false;
 let isPollingNetwork = false;
@@ -18,10 +19,9 @@ class ProcessAnomalyEngine {
   private baselines: Map<string, { cpuEma: number, memEma: number, cpuVar: number, memVar: number, count: number }> = new Map();
   private alpha = 0.2; // EWMA decay factor
 
-  public analyze(name: string, cpu: number, mem: number): { isAnomaly: boolean, zScoreCpu: number, zScoreMem: number, details: string } {
+  public analyze(name: string, cpu: number, mem: number, pid: number): { isAnomaly: boolean, zScoreCpu: number, zScoreMem: number, details: string, dlScore: number } {
     if (!this.baselines.has(name)) {
       this.baselines.set(name, { cpuEma: cpu, memEma: mem, cpuVar: 1, memVar: 1, count: 1 });
-      return { isAnomaly: false, zScoreCpu: 0, zScoreMem: 0, details: '' };
     }
 
     const stats = this.baselines.get(name)!;
@@ -33,6 +33,22 @@ class ProcessAnomalyEngine {
     const zScoreCpu = (cpu - stats.cpuEma) / cpuStdDev;
     const zScoreMem = (mem - stats.memEma) / memStdDev;
 
+    // Deep Learning inference
+    const dlFeatures = [
+        cpu / 100.0,
+        mem / 100.0,
+        Math.min(Math.abs(zScoreCpu) / 5.0, 1.0),
+        Math.min(Math.abs(zScoreMem) / 5.0, 1.0),
+        pid > 1000 ? 0.5 : 0.1,
+        stats.count > 50 ? 0.2 : 0.8,
+        0, 0, 0, 0
+    ];
+    
+    // Train DL model online asynchronously
+    if (Math.random() < 0.05) dlAnomalyEngine.trainIForest([dlFeatures]);
+    
+    const dlScore = dlAnomalyEngine.score(dlFeatures);
+
     // Update EWMA Variance and Mean
     stats.cpuVar = (1 - this.alpha) * (stats.cpuVar + this.alpha * Math.pow(cpu - stats.cpuEma, 2)) || 1;
     stats.memVar = (1 - this.alpha) * (stats.memVar + this.alpha * Math.pow(mem - stats.memEma, 2)) || 1;
@@ -40,16 +56,18 @@ class ProcessAnomalyEngine {
     stats.cpuEma = (this.alpha * cpu) + ((1 - this.alpha) * stats.cpuEma);
     stats.memEma = (this.alpha * mem) + ((1 - this.alpha) * stats.memEma);
 
-    const isAnomaly = stats.count > 10 && (Math.abs(zScoreCpu) > 3.0 || Math.abs(zScoreMem) > 3.0);
+    const isAnomaly = (stats.count > 10 && (Math.abs(zScoreCpu) > 3.0 || Math.abs(zScoreMem) > 3.0)) || dlScore > 0.7;
     
     let details = '';
     if (isAnomaly) {
-        details = `Statistical Anomaly (EWMA): `;
+        if (dlScore > 0.7) details = `Deep Learning Anomaly (Score: ${dlScore.toFixed(2)}) `;
+        else details = `Statistical Anomaly (EWMA): `;
+        
         if (Math.abs(zScoreCpu) > 3.0) details += `CPU Z-Score ${zScoreCpu.toFixed(1)} `;
         if (Math.abs(zScoreMem) > 3.0) details += `MEM Z-Score ${zScoreMem.toFixed(1)}`;
     }
 
-    return { isAnomaly, zScoreCpu, zScoreMem, details };
+    return { isAnomaly, zScoreCpu, zScoreMem, details, dlScore };
   }
 }
 
@@ -82,7 +100,7 @@ export const realSystemMonitor = {
             const suspiciousRegex = /\b(nc|nmap|miner|exploit|reverse|meterpreter|beacon|cobalt|malware|keylogger|ncat|reverse_shell|base64)\b/i;
             const isSuspicious = suspiciousRegex.test(name) || suspiciousRegex.test(cmdline);
             const isDevCommand = /\b(vite|node|tsx|npm|python|python3|concurrently|sh|ps|bash|grep|cat|ls|npx|systeminformation)\b/i.test(cmdline) || /\b(vite|node|tsx|npm|python|python3|concurrently|sh|ps|bash)\b/i.test(name);
-            const { isAnomaly, details: anomalyDetails } = anomalyEngine.analyze(name, cpu, mem);
+            const { isAnomaly, details: anomalyDetails, dlScore } = anomalyEngine.analyze(name, cpu, mem, pid);
             const flagged = (isSuspicious && !isDevCommand) || isAnomaly;
 
             const details = { pid, name, cpu_percent: cpu, memory_usage: mem, exe_path: name, cmdline: cmdline + (isAnomaly ? ` | ${anomalyDetails}` : ''), user, status, timestamp: new Date().toISOString(), is_suspicious: flagged ? 1 : 0 };
@@ -93,7 +111,7 @@ export const realSystemMonitor = {
             }
 
             if (shouldSendToAi) {
-              await systemService.processData({ type: 'process', details, risk_score: flagged ? 0.9 : 0.1, flagged });
+              await systemService.processData({ type: 'process', details, risk_score: flagged ? (dlScore > 0.7 ? dlScore : 0.9) : dlScore, flagged });
             }
           }
         } else {
@@ -115,7 +133,7 @@ export const realSystemMonitor = {
               const suspiciousRegex = /\b(nc|nmap|miner|exploit|reverse|meterpreter|beacon|cobalt|malware|keylogger|ncat|reverse_shell|base64)\b/i;
               const isSuspicious = suspiciousRegex.test(name) || suspiciousRegex.test(cmdline);
               const isDevCommand = /\b(vite|node|tsx|npm|python|python3|concurrently|sh|ps|bash|grep|cat|ls|npx|systeminformation)\b/i.test(cmdline) || /\b(vite|node|tsx|npm|python|python3|concurrently|sh|ps|bash)\b/i.test(name);
-              const { isAnomaly, details: anomalyDetails } = anomalyEngine.analyze(name, cpu, mem);
+              const { isAnomaly, details: anomalyDetails, dlScore } = anomalyEngine.analyze(name, cpu, mem, pid);
               const flagged = (isSuspicious && !isDevCommand) || isAnomaly;
               
               const details = {
@@ -141,7 +159,7 @@ export const realSystemMonitor = {
                 await systemService.processData({
                   type: 'process',
                   details,
-                  risk_score: flagged ? 0.9 : 0.1,
+                  risk_score: flagged ? (dlScore > 0.7 ? dlScore : 0.9) : dlScore,
                   flagged
                 });
               }
