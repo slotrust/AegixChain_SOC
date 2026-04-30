@@ -19,7 +19,7 @@ class ProcessAnomalyEngine {
   private baselines: Map<string, { cpuEma: number, memEma: number, cpuVar: number, memVar: number, count: number }> = new Map();
   private alpha = 0.2; // EWMA decay factor
 
-  public analyze(name: string, cpu: number, mem: number, pid: number): { isAnomaly: boolean, zScoreCpu: number, zScoreMem: number, details: string, dlScore: number } {
+  public async analyze(name: string, cpu: number, mem: number, pid: number): Promise<{ isAnomaly: boolean, zScoreCpu: number, zScoreMem: number, details: string, dlScore: number }> {
     if (!this.baselines.has(name)) {
       this.baselines.set(name, { cpuEma: cpu, memEma: mem, cpuVar: 1, memVar: 1, count: 1 });
     }
@@ -47,7 +47,21 @@ class ProcessAnomalyEngine {
     // Train DL model online asynchronously
     if (Math.random() < 0.05) dlAnomalyEngine.trainIForest([dlFeatures]);
     
-    const dlScore = dlAnomalyEngine.score(dlFeatures);
+    const dlScore = await dlAnomalyEngine.score(dlFeatures);
+    
+    let explanation = "";
+    if (dlScore > 0.7) {
+        const featureNames = [
+            "High CPU Usage", 
+            "High Memory Usage", 
+            "CPU Deviation (Z-Score)", 
+            "Memory Deviation (Z-Score)", 
+            "Process ID Range Anomaly", 
+            "Baseline Count Anomaly",
+            "Hidden 1", "Hidden 2", "Hidden 3", "Hidden 4"
+        ];
+        explanation = await dlAnomalyEngine.explain(dlFeatures, featureNames);
+    }
 
     // Update EWMA Variance and Mean
     stats.cpuVar = (1 - this.alpha) * (stats.cpuVar + this.alpha * Math.pow(cpu - stats.cpuEma, 2)) || 1;
@@ -60,7 +74,7 @@ class ProcessAnomalyEngine {
     
     let details = '';
     if (isAnomaly) {
-        if (dlScore > 0.7) details = `Deep Learning Anomaly (Score: ${dlScore.toFixed(2)}) `;
+        if (dlScore > 0.7) details = `Deep Learning Anomaly (Score: ${dlScore.toFixed(2)}) | ${explanation}`;
         else details = `Statistical Anomaly (EWMA): `;
         
         if (Math.abs(zScoreCpu) > 3.0) details += `CPU Z-Score ${zScoreCpu.toFixed(1)} `;
@@ -100,7 +114,7 @@ export const realSystemMonitor = {
             const suspiciousRegex = /\b(nc|nmap|miner|exploit|reverse|meterpreter|beacon|cobalt|malware|keylogger|ncat|reverse_shell|base64)\b/i;
             const isSuspicious = suspiciousRegex.test(name) || suspiciousRegex.test(cmdline);
             const isDevCommand = /\b(vite|node|tsx|npm|python|python3|concurrently|sh|ps|bash|grep|cat|ls|npx|systeminformation)\b/i.test(cmdline) || /\b(vite|node|tsx|npm|python|python3|concurrently|sh|ps|bash)\b/i.test(name);
-            const { isAnomaly, details: anomalyDetails, dlScore } = anomalyEngine.analyze(name, cpu, mem, pid);
+            const { isAnomaly, details: anomalyDetails, dlScore } = await anomalyEngine.analyze(name, cpu, mem, pid);
             const flagged = (isSuspicious && !isDevCommand) || isAnomaly;
 
             const details = { pid, name, cpu_percent: cpu, memory_usage: mem, exe_path: name, cmdline: cmdline + (isAnomaly ? ` | ${anomalyDetails}` : ''), user, status, timestamp: new Date().toISOString(), is_suspicious: flagged ? 1 : 0 };
@@ -133,7 +147,7 @@ export const realSystemMonitor = {
               const suspiciousRegex = /\b(nc|nmap|miner|exploit|reverse|meterpreter|beacon|cobalt|malware|keylogger|ncat|reverse_shell|base64)\b/i;
               const isSuspicious = suspiciousRegex.test(name) || suspiciousRegex.test(cmdline);
               const isDevCommand = /\b(vite|node|tsx|npm|python|python3|concurrently|sh|ps|bash|grep|cat|ls|npx|systeminformation)\b/i.test(cmdline) || /\b(vite|node|tsx|npm|python|python3|concurrently|sh|ps|bash)\b/i.test(name);
-              const { isAnomaly, details: anomalyDetails, dlScore } = anomalyEngine.analyze(name, cpu, mem, pid);
+              const { isAnomaly, details: anomalyDetails, dlScore } = await anomalyEngine.analyze(name, cpu, mem, pid);
               const flagged = (isSuspicious && !isDevCommand) || isAnomaly;
               
               const details = {

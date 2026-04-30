@@ -107,23 +107,39 @@ Output JSON: [{ "tactic": "...", "technique_name": "...", "technique_id": "..." 
 }
 
 async function explainAndRespondNode(state: AnalystAgentState): Promise<Partial<AnalystAgentState>> {
-   const prompt = `You are a high-reasoning Security Analyst Agent.
-Analyze the following attack chain and MITRE mappings, and explain the complex attack path to a human operator. Also recommend a response action (Block, Isolate, Notify, Ignore, Deploy_Honeypot).
+   const prompt = `You are a high-reasoning Security Analyst Agent powered by Deep Learning LLMs.
+Task: Analyze the following attack chain and MITRE mappings.
+1. Cross-reference the raw payloads (IPs, process names, command lines) with your internal knowledge base (simulating online threat intel research).
+2. Determine if this is a FALSE POSITIVE (e.g. normal admin activity, legitimate software). Verify every raw data payload.
+3. If it is a real threat, explain the complex attack path and the Deep Learning / ML model's anomaly decision to a human operator in clear terms.
+4. Recommend a response action (Block, Isolate, Notify, Ignore, Deploy_Honeypot).
+
 Attack Chain: ${JSON.stringify(state.correlated_chain)}
+Original Raw Events: ${JSON.stringify(state.raw_events)}
 MITRE Mappings: ${JSON.stringify(state.mitre_mappings)}
 
 Output JSON ONLY:
 {
-  "explanation": "Detailed explanation of the attack path...",
-  "recommended_action": "Block"
+  "explanation": "Detailed explanation of the attack path, incorporating your simulated online research findings on the raw payloads and why the deep learning model flagged it...",
+  "recommended_action": "Block",
+  "is_false_positive": false
 }`;
 
   try {
      const textObj = await generateWithFallback(prompt);
      let text = textObj.replace(/```json/g, '').replace(/```/g, '').trim() || "{}";
      const parsed = JSON.parse(text);
+     
+     let finalExplanation = parsed.explanation || "Failed to analyze.";
+     if (parsed.is_false_positive) {
+         finalExplanation = "[RESEARCHED: FALSE POSITIVE] " + finalExplanation;
+         parsed.recommended_action = "Ignore";
+     } else {
+         finalExplanation = "[RESEARCHED: THREAT CONFIRMED] " + finalExplanation;
+     }
+
      return { 
-        explanation: parsed.explanation || "Failed to analyze.",
+        explanation: finalExplanation,
         recommended_action: parsed.recommended_action || "Notify"
      };
   } catch (e) {

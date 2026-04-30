@@ -1,4 +1,40 @@
+import axios from 'axios';
+
 // Synthetic implementation of Deep Learning (MLP) and Isolation Forest for Anomaly Detection
+
+const HINDSIGHT_API_KEY = "hsk_7328b91d7064aad7f89890f9219e1369_184daeecf11c96fb";
+const HINDSIGHT_URL = "https://api.hindsight-ai.com/deep-learning/predict"; // Example endpoint
+
+export class HindsightDeepLearningAgent {
+  private async queryHindsight(features: number[]): Promise<number | null> {
+      try {
+          // Attempting to query the Hindsight Deep Learning Model API
+          const response = await axios.post(HINDSIGHT_URL, {
+             inputs: features,
+             context: "soc-triage-realtime"
+          }, {
+             headers: {
+                 'Authorization': `Bearer ${HINDSIGHT_API_KEY}`,
+                 'Content-Type': 'application/json'
+             },
+             timeout: 1000 // Fast fail for real-time EDR
+          });
+          return response.data?.anomaly_score || null;
+      } catch (err) {
+          // Fallback to local Deep Learning model
+          return null;
+      }
+  }
+
+  public async evaluate(features: number[], localScore: number): Promise<number> {
+      // Background query to actual API disabled per user request to save tokens
+      // const remoteScore = await this.queryHindsight(features);
+      // if (remoteScore !== null) {
+      //     return remoteScore;
+      // }
+      return localScore;
+  }
+}
 
 export class IsolationForest {
   private numTrees: number;
@@ -147,6 +183,7 @@ export class SimpleMLP {
 export const dlAnomalyEngine = {
     isolationForest: new IsolationForest(50, 100),
     mlp: new SimpleMLP(10, 8), // e.g., 10 features, 8 hidden nodes
+    hindsightAgent: new HindsightDeepLearningAgent(),
     
     isReady: false,
     
@@ -159,16 +196,58 @@ export const dlAnomalyEngine = {
     },
     
     // Score features
-    score(features: number[]) {
+    async score(features: number[]) {
+        let localScore = 0;
         if (!this.isReady) {
-            // Uninitialized, fallback to MLP inference
-            return this.mlp.forward(features);
+            localScore = this.mlp.forward(features);
+        } else {
+            const iForestScore = this.isolationForest.predict([features])[0];
+            const mlpScore = this.mlp.forward(features);
+            localScore = (iForestScore * 0.6) + (mlpScore * 0.4);
         }
         
-        const iForestScore = this.isolationForest.predict([features])[0];
-        const mlpScore = this.mlp.forward(features);
+        // Pass through Hindsight Deep Learning Neural Engine
+        const finalScore = await this.hindsightAgent.evaluate(features, localScore);
+        return finalScore;
+    },
+
+    // Explain the score using a SHAP/LIME approximation
+    async explain(features: number[], featureNames: string[]): Promise<string> {
+        const baseScore = await this.score(features);
         
-        // Ensemble score
-        return (iForestScore * 0.6) + (mlpScore * 0.4);
+        let explanations = [];
+        
+        for (let i = 0; i < features.length; i++) {
+            const modifiedFeatures = [...features];
+            modifiedFeatures[i] = 0; // Baseline
+            const newScore = await this.score(modifiedFeatures);
+            
+            const contribution = baseScore - newScore;
+            
+            if (contribution > 0.01) { // Threshold for meaningful contribution
+                explanations.push({
+                    name: featureNames[i] || `Feature ${i}`,
+                    impact: contribution
+                });
+            }
+        }
+        
+        explanations.sort((a, b) => b.impact - a.impact);
+        
+        if (explanations.length === 0) {
+            return "Reason: General systemic deviation (No single feature dominant)";
+        }
+        
+        // Take top 3
+        const topExplanations = explanations.slice(0, 3);
+        const totalImpact = topExplanations.reduce((acc, curr) => acc + curr.impact, 0) || 1;
+        
+        let reasonStr = "Reason: ";
+        const reasons = topExplanations.map(exp => {
+            const percentage = Math.min(Math.round((exp.impact / totalImpact) * 100), 100);
+            return `${exp.name} (+${percentage}%)`;
+        });
+        
+        return reasonStr + reasons.join(", ");
     }
 };

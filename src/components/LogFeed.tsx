@@ -9,7 +9,7 @@ interface LogFeedProps {
 }
 
 export default function LogFeed({ onSelectLog }: LogFeedProps) {
-  const { data: logs, loading } = usePolling(() => api.getLogs({ limit: 100 }), 3000);
+  const { data: logs, loading } = usePolling(() => api.getLogs({ limit: 150 }), 3000);
 
   const [filterEventType, setFilterEventType] = useState('');
   const [filterSourceIp, setFilterSourceIp] = useState('');
@@ -20,7 +20,7 @@ export default function LogFeed({ onSelectLog }: LogFeedProps) {
 
   const filteredLogs = useMemo(() => {
     if (!logs || !Array.isArray(logs)) return [];
-    return logs.filter((log: any) => {
+    const baseFiltered = logs.filter((log: any) => {
       if (filterEventType && log.event_type !== filterEventType) return false;
       if (filterSourceIp && !log.source_ip.includes(filterSourceIp)) return false;
       if (filterAnomaly === 'anomaly' && !log.is_anomaly) return false;
@@ -28,6 +28,13 @@ export default function LogFeed({ onSelectLog }: LogFeedProps) {
       if (filterStatusMin !== '' && log.status_code < Number(filterStatusMin)) return false;
       if (filterStatusMax !== '' && log.status_code > Number(filterStatusMax)) return false;
       return true;
+    });
+    
+    // Pin anomalous/flagged logs to the top
+    return baseFiltered.sort((a, b) => {
+      if (a.is_anomaly && !b.is_anomaly) return -1;
+      if (!a.is_anomaly && b.is_anomaly) return 1;
+      return new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime();
     });
   }, [logs, filterEventType, filterSourceIp, filterAnomaly, filterStatusMin, filterStatusMax]);
 

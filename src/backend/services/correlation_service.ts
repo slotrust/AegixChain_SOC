@@ -77,7 +77,7 @@ export const correlationService = {
   },
 
   // 2. Deep Learning Correlation Engine Logic
-  correlateEvents: () => {
+  correlateEvents: async () => {
     // Sliding window: Get events from the last 5 minutes (sqlite datetimes are UTC)
     const recentEvents = db.prepare(`
       SELECT * FROM normalized_events 
@@ -104,12 +104,29 @@ export const correlationService = {
       if (chain.length < 2) continue; // Skip weak chains
       
       const features = correlationService.extractFeatures(chain);
-      const dlAnomalyScore = dlAnomalyEngine.score(features);
+      const dlAnomalyScore = await dlAnomalyEngine.score(features);
       
       // Reduce alert noise by applying high threshold on anomaly score
       // A score > 0.65 from Isolation Forest implies significant anomaly
       // linking activity across the kill chain.
       if (dlAnomalyScore >= 0.62) {
+        let explanation = "";
+        if (dlAnomalyScore > 0.6) {
+           const featureNames = [
+               "Process Activity Volume",
+               "Network Activity Volume",
+               "File System Activity",
+               "Unique Entities Involved",
+               "Unique Actions Taken",
+               "Attack Chain Length",
+               "Execution Activity Detected",
+               "Network Connection Detected",
+               "File Modification Detected",
+               "Hidden Feature"
+           ];
+           explanation = await dlAnomalyEngine.explain(features, featureNames);
+        }
+
         // Find MITRE tactics
         const tactics = new Set<string>();
         for (const event of chain) {
@@ -117,7 +134,7 @@ export const correlationService = {
            if (map) tactics.add(map.tactic);
         }
 
-        const title = `Multi-Stage ML Anomaly (Score: ${dlAnomalyScore.toFixed(2)})`;
+        const title = `Multi-Stage ML Anomaly (Score: ${dlAnomalyScore.toFixed(2)}) | ${explanation}`;
         const severity = dlAnomalyScore >= 0.75 ? 'Critical' : 'High';
         
         // Check for duplicates

@@ -299,9 +299,38 @@ export default function AlertsPanel({ onInvestigate }: AlertsPanelProps) {
                 <button
                   onClick={() => onInvestigate(alert)}
                   className="px-3 py-1.5 bg-soc-cyan/10 hover:bg-soc-cyan/20 text-soc-cyan rounded-lg transition-colors"
+                  title="Investigate"
                 >
                   <Search className="w-4 h-4" />
                 </button>
+              </div>
+
+              <div className="mt-3 pt-3 border-t border-soc-border/30 flex justify-between items-center">
+                 <span className="text-[10px] text-soc-muted font-mono">Reinforcement Learning Feedback:</span>
+                 <div className="flex gap-2">
+                    <button 
+                         onClick={(e) => { 
+                             e.stopPropagation(); 
+                             api.submitFeedback(alert.id, false)
+                              .then(() => toast.success("Learned Positive Feedback"))
+                              .catch(() => toast.error("Feedback failed"));
+                         }} 
+                         className="px-2 py-1 text-[10px] border border-soc-green/30 bg-soc-green/10 text-soc-green hover:bg-soc-green/20 rounded transition-colors"
+                    >
+                      True Positive
+                    </button>
+                    <button 
+                         onClick={(e) => { 
+                             e.stopPropagation(); 
+                             api.submitFeedback(alert.id, true)
+                              .then(() => toast.success("Learned Negative Feedback & Adjusted Thresholds"))
+                              .catch(() => toast.error("Feedback failed"));
+                         }} 
+                         className="px-2 py-1 text-[10px] border border-soc-red/30 bg-soc-red/10 text-soc-red hover:bg-soc-red/20 rounded transition-colors"
+                    >
+                      False Positive
+                    </button>
+                 </div>
               </div>
             </div>
           ))}

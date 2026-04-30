@@ -12,7 +12,7 @@ export const systemService = {
     const { type, details, timestamp, risk_score, flagged } = data;
     
     // MultiAgent Collector
-    multiAgentSystem.collectorIngest(details, type);
+    await multiAgentSystem.collectorIngest(details, type);
 
     if (type === 'process') {
       // Pass to Behavioral AI logic

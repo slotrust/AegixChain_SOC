@@ -184,7 +184,19 @@ export default function ProcessPanel() {
                         </div>
                         <div className="md:col-span-2">
                           <div className="text-soc-muted text-xs uppercase tracking-widest mb-1">Command Line Arguments</div>
-                          <div className="font-mono text-soc-text break-all bg-black/30 p-2 rounded border border-soc-border/50 whitespace-pre-wrap">{proc.cmdline || 'N/A'}</div>
+                          <div className="font-mono text-soc-text break-all bg-black/30 p-2 rounded border border-soc-border/50 whitespace-pre-wrap">
+                            {proc.cmdline ? proc.cmdline.split(' | Reason: ')[0] : 'N/A'}
+                          </div>
+                          {proc.cmdline && proc.cmdline.includes(' | Reason: ') && (
+                            <div className="mt-2 text-xs font-mono bg-black/30 p-2 rounded border border-soc-border/50">
+                               <div className="text-soc-orange mb-1 font-bold">XAI Reason:</div>
+                               {proc.cmdline.split(' | Reason: ')[1].split(', ').map((reason: string, i: number) => (
+                                   <div key={i} className="text-soc-muted mb-1 last:mb-0">
+                                     - {reason}
+                                   </div>
+                               ))}
+                            </div>
+                          )}
                         </div>
                         
                         <div className="md:col-span-2 pt-2 border-t border-soc-border/30 mt-2">

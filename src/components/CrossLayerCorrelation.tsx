@@ -68,7 +68,18 @@ export default function CrossLayerCorrelation() {
                         Score: {Math.round(threat.risk_score * 100)}
                       </div>
                     </div>
-                    <div className="font-bold text-soc-text text-sm mb-2">{threat.title}</div>
+                    <div className="font-bold text-soc-text text-sm mb-2">
+                      {threat.title.split(' | ')[0]}
+                    </div>
+                    {threat.title.includes(' | ') && (
+                       <div className="mt-2 text-xs font-mono bg-black/30 p-2 rounded border border-soc-border/50">
+                          {threat.title.split(' | ')[1].split(', ').map((reason: string, i: number) => (
+                              <div key={i} className="text-soc-muted mb-1 last:mb-0">
+                                - {reason.replace('Reason: ', '')}
+                              </div>
+                          ))}
+                       </div>
+                    )}
                     
                     <div className="flex items-center justify-between mt-3 pt-3 border-t border-soc-border/50">
                       <div className="text-[10px] text-soc-muted font-mono">

@@ -41,15 +41,6 @@ ${JSON.stringify(mitreTimeline, null, 2)}
 
     // Fetch conversation history
     let history = conversationHistory.get(sessionId) || [];
-    
-    // Set up LLM
-    const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey || apiKey === 'undefined' || apiKey === '') {
-       return res.json({ 
-          response: "SYSTEM NOTE: AI integration is currently offline due to missing API Key. Please verify your environment configuration or continue to operate in fallback mode. The issue with process '" + (req.body.contextData?.process_name || 'unknown') + "' can be managed manually in the EDR panel."
-       });
-    }
-    const ai = new GoogleGenAI({ apiKey });
 
     const systemPrompt = `You are the Aegix AI Assistant, an expert SOC analyst providing conversational support to human security operators.
 You have access to the current system state, threat memory, and MITRE ATT&CK mappings.
@@ -65,28 +56,46 @@ System Context Data:
 ${contextStr}
 `;
 
-    const chatSession = ai.chats.create({
-      model: 'gemini-3.1-pro-preview',
-      config: {
-        systemInstruction: systemPrompt,
-        temperature: 0.2
-      }
-    });
-
-    // Replay history for the chat session context (if using chats.create, we can optionally pass history or let it be stateless if we just pass everything as prompt)
-    // Since we're keeping it simple, let's just make a single generateContent call with history appended
-    let fullPrompt = history.map(h => `${h.role === 'user' ? 'User' : 'Aegix'}: ${h.text}`).join('\n') + `\nUser: ${query}`;
+    let fullPrompt = systemPrompt + "\n\n" + history.map(h => `${h.role === 'user' ? 'User' : 'Aegix'}: ${h.text}`).join('\n') + `\nUser: ${query}`;
     
-    const response = await ai.models.generateContent({
-      model: 'gemini-3.1-pro-preview',
-      contents: fullPrompt,
-      config: {
-        systemInstruction: systemPrompt,
-        temperature: 0.2
-      }
-    });
-
-    const replyText = response.text || 'I could not generate a response.';
+    let replyText = 'I could not generate a response.';
+    
+    try {
+        const apiKey = process.env.GEMINI_API_KEY;
+        if (apiKey && apiKey !== 'undefined' && apiKey !== '') {
+            const ai = new GoogleGenAI({ apiKey });
+            const response = await ai.models.generateContent({
+              model: 'gemini-2.5-flash',
+              contents: fullPrompt,
+              config: {
+                temperature: 0.2
+              }
+            });
+            replyText = response.text || replyText;
+        } else {
+            throw new Error("Missing Gemini API Key");
+        }
+    } catch (err) {
+        // Fallback to NVIDIA LLM
+        console.log("Falling back to NVIDIA LLM for Assistant...");
+        try {
+            const OpenAI = (await import('openai')).default;
+            const nvidiaClient = new OpenAI({
+              apiKey: process.env.NVIDIA_API_KEY || "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",
+              baseURL: "https://integrate.api.nvidia.com/v1",
+            });
+            const res = await nvidiaClient.chat.completions.create({
+              model: "meta/llama3-70b-instruct",
+              messages: [{ role: "user", content: fullPrompt }],
+              max_tokens: 1024,
+              temperature: 0.2
+            });
+            replyText = res.choices[0]?.message?.content || replyText;
+        } catch (innerErr) {
+            console.error("Both primary and fallback AI failed: ", innerErr);
+             replyText = "SYSTEM NOTE: AI integration is currently offline. The issue can be managed manually in the EDR panel.";
+        }
+    }
     
     // Update history
     history.push({ role: 'user', text: query });

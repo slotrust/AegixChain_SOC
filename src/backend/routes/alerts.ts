@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { alertService, settingsService } from "../services/alert_service.js";
 import { authMiddleware } from "../middleware/auth.js";
+import { rlAgent } from "../services/rl_agent.js";
 
 const router = Router();
 
@@ -55,6 +56,22 @@ router.patch("/:id/acknowledge", (req, res) => {
   const acknowledged = req.body.acknowledged === true;
   const alert = alertService.acknowledgeAlert(parseInt(req.params.id), acknowledged);
   res.json(alert);
+});
+
+router.post("/:id/feedback", (req, res) => {
+  const alert = alertService.getAlertById(parseInt(req.params.id));
+  if (!alert) return res.status(404).json({ error: "Alert not found" });
+
+  const { isFalsePositive } = req.body;
+  
+  if (isFalsePositive) {
+     rlAgent.learn(alert.severity, 'unknown', 'Block', -1.0); // Penalize false positive block
+     rlAgent.learn(alert.severity, 'unknown', 'Notify', 0.5); // Reward notify instead
+  } else {
+     rlAgent.learn(alert.severity, 'unknown', 'Block', 1.0); // Reward correct identification
+  }
+  
+  res.json({ success: true, message: "Feedback learned successfully" });
 });
 
 export default router;

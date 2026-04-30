@@ -58,6 +58,7 @@ export const api = {
   getAlerts: (params = {}) => client.get('/alerts', { params }),
   getAlert: (id) => client.get(`/alerts/${id}`),
   acknowledgeAlert: (id, acknowledged) => client.patch(`/alerts/${id}/acknowledge`, { acknowledged }),
+  submitFeedback: (id, isFalsePositive) => client.post(`/alerts/${id}/feedback`, { isFalsePositive }),
   getSettings: () => client.get('/alerts/settings'),
   updateSettings: (settings) => client.post('/alerts/settings', settings),
   sendChatMessage: (message, context_alert_id = null) => client.post('/chat', { message, context_alert_id }),

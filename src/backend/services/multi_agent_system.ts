@@ -71,7 +71,7 @@ class MultiAgentSystem extends EventEmitter {
 
   // 1. Collector Agent (👁)
   // Invoked externally when system stats arrive
-  public collectorIngest(data: any, type: 'process' | 'network' | 'system') {
+  public async collectorIngest(data: any, type: 'process' | 'network' | 'system') {
     this.dispatchMessage({
       id: `msg-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
       timestamp: new Date().toISOString(),
@@ -104,7 +104,7 @@ class MultiAgentSystem extends EventEmitter {
       });
       
       // Attempt correlation (in real system, run async or periodically)
-      const newThreats = correlationService.correlateEvents();
+      const newThreats = await correlationService.correlateEvents();
       if (newThreats && newThreats.length > 0) {
          // Create alerts for new correlated threats if needed
          for (const threat of newThreats) {
