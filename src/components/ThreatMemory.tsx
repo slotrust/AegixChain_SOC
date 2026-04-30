@@ -30,6 +30,7 @@ export default function ThreatMemory() {
        const res = await api.askAssistant(`Summarize this threat memory incident clearly: \n\n Threat: ${threat.threat_type}\n Target: ${threat.ip_address || threat.process_name}\n Findings: ${threat.patterns || 'Anomalous behaviour detected'}\n Action: ${threat.action_taken}`);
        setAiSummary(res.data.reply || res.data || "Summary generated successfully based on threat memory engine data.");
     } catch (error) {
+       console.error("AI summary error: ", error);
        setAiSummary("*Error generating detailed AI summary for this threat.*");
     } finally {
        setIsGenerating(false);
