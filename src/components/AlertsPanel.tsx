@@ -287,7 +287,12 @@ export default function AlertsPanel({ onInvestigate }: AlertsPanelProps) {
                   }
 
                   if (parsedPayload) {
-                      const payloadStr = typeof parsedPayload === 'object' ? JSON.stringify(parsedPayload) : String(parsedPayload);
+                      let payloadStr = '';
+                      try {
+                         payloadStr = typeof parsedPayload === 'object' ? JSON.stringify(parsedPayload) : String(parsedPayload);
+                      } catch (e) {
+                         payloadStr = String(parsedPayload);
+                      }
                       if (payloadStr && payloadStr !== '{}') {
                          return (
                             <div className="w-full text-left bg-soc-bg border border-soc-border rounded p-2 mb-3 overflow-x-auto">

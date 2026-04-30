@@ -220,60 +220,11 @@ export default function App() {
     setIsChatFloatingOpen(false);
   };
 
-  const renderContent = () => {
-    switch (activeTab) {
-      case 'dashboard':
-        return <Dashboard onSelectLog={setSelectedIncident} onInvestigate={handleInvestigate} />;
-      case 'aegix':
-        return <AegixBrain />;
-      case 'edr':
-        return <EndpointEDR />;
-      case 'processes':
-        return (
-          <div className="space-y-6">
-            <h2 className="text-2xl font-bold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-soc-text to-soc-muted">System Processes</h2>
-            <ProcessPanel />
-          </div>
-        );
-      case 'network':
-        return (
-          <div className="space-y-6">
-            <h2 className="text-2xl font-bold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-soc-text to-soc-muted">Network Activity</h2>
-            <NetworkPanel />
-          </div>
-        );
-      case 'alerts':
-        return (
-          <div className="max-w-4xl mx-auto">
-            <h2 className="text-2xl font-bold mb-6 tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-soc-text to-soc-muted">Active Security Alerts</h2>
-            <AlertsPanel onInvestigate={handleInvestigate} />
-          </div>
-        );
-      case 'logs':
-        return (
-          <div className="space-y-6">
-            <h2 className="text-2xl font-bold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-soc-text to-soc-muted">Comprehensive Log Stream</h2>
-            <LogFeed onSelectLog={setSelectedIncident} />
-          </div>
-        );
-      case 'forensics':
-        return <ForensicsPanel />;
-      case 'users':
-        return user.role === 'admin' ? <UserManagement /> : <div className="p-8 text-soc-red">Unauthorized</div>;
-      case 'ips':
-        return user.role === 'admin' ? <IPSManagement /> : <div className="p-8 text-soc-red">Unauthorized</div>;
-      case 'chatbot':
-        return (
-          <Chatbot 
-            contextData={chatContextData} 
-            onClearContext={() => setChatContextData(null)} 
-            autoSend={true}
-          />
-        );
-      default:
-        return <Dashboard onSelectLog={setSelectedIncident} onInvestigate={handleInvestigate} />;
-    }
-  };
+  const renderTab = (id: string, content: React.ReactNode) => (
+    <div key={id} style={{ display: activeTab === id ? 'block' : 'none' }} className="h-full">
+      {content}
+    </div>
+  );
 
   return (
     <div className="min-h-screen bg-soc-bg text-soc-text flex dark">
@@ -365,18 +316,45 @@ export default function App() {
         {/* Content Area */}
         <div className="flex-1 p-8 overflow-x-hidden">
           <ErrorBoundary>
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={activeTab}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.2 }}
-                className="h-full"
-              >
-                {renderContent()}
-              </motion.div>
-            </AnimatePresence>
+            <div className="h-full relative">
+              {renderTab('dashboard', <Dashboard onSelectLog={setSelectedIncident} onInvestigate={handleInvestigate} />)}
+              {renderTab('aegix', <AegixBrain />)}
+              {renderTab('edr', <EndpointEDR />)}
+              {renderTab('processes', (
+                <div className="space-y-6">
+                  <h2 className="text-2xl font-bold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-soc-text to-soc-muted">System Processes</h2>
+                  <ProcessPanel />
+                </div>
+              ))}
+              {renderTab('network', (
+                <div className="space-y-6">
+                  <h2 className="text-2xl font-bold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-soc-text to-soc-muted">Network Activity</h2>
+                  <NetworkPanel />
+                </div>
+              ))}
+              {renderTab('alerts', (
+                <div className="max-w-4xl mx-auto">
+                  <h2 className="text-2xl font-bold mb-6 tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-soc-text to-soc-muted">Active Security Alerts</h2>
+                  <AlertsPanel onInvestigate={handleInvestigate} />
+                </div>
+              ))}
+              {renderTab('logs', (
+                <div className="space-y-6">
+                  <h2 className="text-2xl font-bold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-soc-text to-soc-muted">Comprehensive Log Stream</h2>
+                  <LogFeed onSelectLog={setSelectedIncident} />
+                </div>
+              ))}
+              {renderTab('forensics', <ForensicsPanel />)}
+              {renderTab('users', user.role === 'admin' ? <UserManagement /> : <div className="p-8 text-soc-red">Unauthorized</div>)}
+              {renderTab('ips', user.role === 'admin' ? <IPSManagement /> : <div className="p-8 text-soc-red">Unauthorized</div>)}
+              {renderTab('chatbot', (
+                <Chatbot 
+                  contextData={chatContextData} 
+                  onClearContext={() => setChatContextData(null)} 
+                  autoSend={true}
+                />
+              ))}
+            </div>
           </ErrorBoundary>
         </div>
       </main>

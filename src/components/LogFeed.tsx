@@ -9,7 +9,7 @@ interface LogFeedProps {
 }
 
 export default function LogFeed({ onSelectLog }: LogFeedProps) {
-  const { data: logs, loading } = usePolling(() => api.getLogs({ limit: 150 }), 3000);
+  const { data: logs, loading } = usePolling(() => api.getLogs({ limit: 200 }), 3000);
 
   const [filterEventType, setFilterEventType] = useState('');
   const [filterSourceIp, setFilterSourceIp] = useState('');

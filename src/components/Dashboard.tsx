@@ -112,28 +112,6 @@ export default function Dashboard({ onSelectLog, onInvestigate }: DashboardProps
 
       {/* Row 2: Layer Health & Episodic Threat Memory */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* System Intelligence Summary */}
-        <motion.div variants={itemVariants} className="lg:col-span-2 glass-panel p-6 rounded-xl border border-soc-purple/20 bg-soc-purple/5 flex flex-col justify-center relative overflow-hidden">
-          <div className="absolute top-0 right-0 p-4 opacity-10">
-            <Brain className="w-24 h-24 text-soc-purple" />
-          </div>
-          <h3 className="text-soc-purple font-bold font-syne text-lg mb-2">System Intelligence</h3>
-          <p className="text-soc-text text-sm leading-relaxed relative z-10">
-            AegixChain utilizes <span className="text-soc-purple font-bold">Episodic Threat Memory</span> and an <span className="text-soc-cyan font-bold">Online Deep Learning Network</span> to embed attack fingerprints and predict future threats. Powered by a local <span className="text-soc-purple font-bold">SmolLM-135M</span> model for autonomous reasoning.
-            <br /><br />
-            <span className="italic text-soc-muted">"The system gets smarter every time it's attacked."</span>
-          </p>
-          <div className="mt-6 flex items-center gap-2">
-            <div className="flex -space-x-2">
-              {[...Array(5)].map((_, i) => (
-                <div key={i} className="w-6 h-6 rounded-full bg-soc-purple/20 border border-soc-purple/40 flex items-center justify-center">
-                  <div className="w-1.5 h-1.5 rounded-full bg-soc-purple animate-pulse" style={{ animationDelay: `${i * 0.2}s` }} />
-                </div>
-              ))}
-            </div>
-            <span className="text-[10px] text-soc-muted font-mono uppercase tracking-widest">Learning Loops Active</span>
-          </div>
-        </motion.div>
 
         {/* Layer Health */}
         <motion.div variants={itemVariants} className="glass-panel rounded-xl flex flex-col overflow-hidden h-[350px]">
@@ -160,7 +138,7 @@ export default function Dashboard({ onSelectLog, onInvestigate }: DashboardProps
         </motion.div>
 
         {/* Episodic Threat Memory */}
-        <motion.div variants={itemVariants} className="lg:col-span-2 glass-panel rounded-xl flex flex-col overflow-hidden h-[350px]">
+        <motion.div variants={itemVariants} className="glass-panel rounded-xl flex flex-col overflow-hidden h-[350px]">
           <div className="p-4 border-b border-white/10 bg-black/40 flex justify-between items-center">
             <h2 className="font-syne font-bold text-soc-text flex items-center gap-2">
               <Brain className="w-5 h-5 text-soc-purple" />

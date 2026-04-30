@@ -254,7 +254,7 @@ class MultiAgentSystem extends EventEmitter {
             mitre_mappings: result.mitre_mappings
           }
         });
-      } catch (err) {
+      } catch (err: any) {
         // Fallback if LLM fails
         this.dispatchMessage({
           id: `msg-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
@@ -343,7 +343,7 @@ class MultiAgentSystem extends EventEmitter {
         status: actionTaken.includes('Block') || actionTaken.includes('Isolate') ? 'auto_resolved' : (actionTaken.includes('Suppressed') ? 'suppressed' : 'active'),
         resolution_action: actionTaken,
         mitigations: `Auto-Response executed: ${actionTaken}`,
-        payload: JSON.stringify(eventData) // include the payload payload
+        payload: (() => { try { return JSON.stringify(eventData); } catch(e) { return String(eventData); } })() // include the payload payload
       });
 
       this.dispatchMessage({

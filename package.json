@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "tsx server.ts",
-    "build": "vite build && esbuild server.ts --bundle --platform=node --target=node22 --format=cjs --outfile=dist/server.cjs --packages=external",
+    "build": "mkdir -p dist && vite build && esbuild server.ts --bundle --platform=node --target=node22 --format=cjs --outfile=dist/server.cjs --packages=external",
     "start": "node dist/server.cjs",
     "generator": "tsx src/logs/generator.ts",
     "test-pip": "tsx src/test_pip.ts",

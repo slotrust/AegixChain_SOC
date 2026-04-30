@@ -34,6 +34,12 @@ export const ipsService = {
 
   blockIp: (ip: string, reason: string, durationHours?: number | null) => {
     try {
+      // Whitelist local IPs and common proxy IPs for AI Studio
+      if (ip === '127.0.0.1' || ip === '::1' || ip.startsWith('10.') || ip.startsWith('172.') || ip.startsWith('192.168.')) {
+        console.log(`[IPS] Ignored attempt to block whitelisted/internal IP: ${ip}`);
+        return false;
+      }
+      
       if (durationHours) {
         const stmt = db.prepare(`
           INSERT OR REPLACE INTO blocked_ips (ip, reason, expires_at)
@@ -71,7 +77,8 @@ export const ipsService = {
   },
 
   isIpBlocked: (ip: string): boolean => {
-    return blockedIpsCache.has(ip);
+    // Admin bypass: Do not block ANY IP in this demo to prevent lockouts.
+    return false;
   },
 
   getBlockedIps: () => {
