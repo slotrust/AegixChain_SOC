@@ -20,6 +20,7 @@ import memoryRoutes from "./src/backend/routes/memory.js";
 import mitreRoutes from "./src/backend/routes/mitre.js";
 import assistantRoutes from "./src/backend/routes/assistant.js";
 import correlationRoutes from "./src/backend/routes/correlation.js";
+import agentRoutes from "./src/backend/routes/agent.js";
 import { apiLimiter } from "./src/backend/middleware/rateLimit.js";
 
 import { ipsMiddleware } from "./src/backend/middleware/ips.js";
@@ -114,6 +115,7 @@ async function startServer() {
   app.use("/api/mitre", mitreRoutes);
   app.use("/api/assistant", assistantRoutes);
   app.use("/api/correlation", correlationRoutes);
+  app.use("/api/agent", agentRoutes);
 
   app.get("/api/sentinel/history", (req, res) => {
     res.json(aegixBridge.getHistory());

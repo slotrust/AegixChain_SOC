@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { X, ShieldAlert, Cpu, ListChecks, Code, MessageSquare, SearchCode, Database, Zap, ShieldOff } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { X, ShieldAlert, Cpu, ListChecks, Code, MessageSquare, SearchCode, Database, Zap, ShieldOff, Play } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { api } from '../api/client';
 import toast from 'react-hot-toast';
@@ -14,6 +14,46 @@ interface IncidentDetailProps {
 export default function IncidentDetail({ incident, onClose, onAskAI, onForensics }: IncidentDetailProps) {
   const [showPayload, setShowPayload] = useState(false);
   const [isIsolating, setIsIsolating] = useState(false);
+  
+  // States for LangGraph Agent Analysis
+  const [agentAnalysis, setAgentAnalysis] = useState<any>(null);
+  const [isRunningAgent, setIsRunningAgent] = useState(false);
+
+  useEffect(() => {
+    if (incident && incident.id) {
+       // Check if analysis already exists
+       fetch(`/api/agent/analysis/${incident.id}`)
+          .then(res => res.json())
+          .then(data => {
+             if (data && !data.error) {
+                 setAgentAnalysis(data);
+             }
+          })
+          .catch(() => {});
+    }
+  }, [incident]);
+
+  const handleRunAgent = async () => {
+      setIsRunningAgent(true);
+      try {
+          const res = await fetch('/api/agent/analyze-alert', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ alertId: incident.id })
+          });
+          const data = await res.json();
+          if (data && !data.error) {
+              setAgentAnalysis(data);
+              toast.success("Agent Analysis Complete");
+          } else {
+              toast.error(data.error || "Agent Analysis Failed");
+          }
+      } catch (e) {
+          toast.error("Agent Analysis Failed");
+      } finally {
+          setIsRunningAgent(false);
+      }
+  };
 
   if (!incident) return null;
 
@@ -184,11 +224,11 @@ export default function IncidentDetail({ incident, onClose, onAskAI, onForensics
               </div>
             </section>
 
-            {/* AI Analysis */}
+            {/* AI Analysis (Anomaly) */}
             <section>
               <h3 className="text-sm font-bold text-soc-muted uppercase tracking-widest mb-4 flex items-center gap-2">
                 <Cpu className="w-4 h-4" />
-                AI Analysis
+                Anomaly Detection
               </h3>
               <div className="bg-soc-bg p-5 rounded-xl border border-soc-border">
                 <div className="flex justify-between items-center mb-3">
@@ -239,6 +279,76 @@ export default function IncidentDetail({ incident, onClose, onAskAI, onForensics
                   {incident.reason || "Pattern analysis indicates unusual activity from this source. Multiple features deviate from baseline behavior."}
                 </p>
               </div>
+            </section>
+
+            {/* AI Agent Analysis (LangGraph) */}
+            <section>
+              <div className="flex justify-between items-center mb-4">
+                  <h3 className="text-sm font-bold text-soc-cyan uppercase tracking-widest flex items-center gap-2">
+                    <Database className="w-4 h-4" /> {/* Or some other icon */}
+                    Agentic Analysis (LangGraph)
+                  </h3>
+                  {!agentAnalysis && (
+                      <button 
+                         onClick={handleRunAgent}
+                         disabled={isRunningAgent}
+                         className="flex items-center gap-2 px-3 py-1.5 bg-soc-cyan/10 text-soc-cyan hover:bg-soc-cyan/20 rounded-lg text-xs font-bold transition-colors border border-soc-cyan/30 disabled:opacity-50"
+                      >
+                          <Play className="w-4 h-4" />
+                          {isRunningAgent ? "Running..." : "Run AI Investigation"}
+                      </button>
+                  )}
+              </div>
+
+              {agentAnalysis && (
+                  <div className="bg-soc-bg p-5 rounded-xl border border-soc-cyan/30 space-y-6">
+                      <div>
+                          <h4 className="text-xs font-bold text-soc-muted uppercase mb-2">Executive Summary</h4>
+                          <p className="text-sm text-soc-text leading-relaxed">{agentAnalysis.summary}</p>
+                      </div>
+
+                      {agentAnalysis.mitre && agentAnalysis.mitre.length > 0 && (
+                          <div>
+                              <h4 className="text-xs font-bold text-soc-muted uppercase mb-2">MITRE ATT&CK Matrix</h4>
+                              <div className="flex flex-wrap gap-2">
+                                  {agentAnalysis.mitre.map((m: any, idx: number) => (
+                                      <div key={idx} className="px-3 py-2 bg-soc-purple/10 border border-soc-purple/30 rounded-lg flex flex-col">
+                                          <span className="text-xs font-bold text-soc-purple">{m.technique} - {m.name}</span>
+                                          <span className="text-[10px] text-soc-muted">Confidence: {Math.round(m.confidence * 100)}%</span>
+                                      </div>
+                                  ))}
+                              </div>
+                          </div>
+                      )}
+
+                      {agentAnalysis.attack_path && agentAnalysis.attack_path.length > 0 && (
+                          <div>
+                              <h4 className="text-xs font-bold text-soc-muted uppercase mb-2">Attack Path</h4>
+                              <div className="space-y-2">
+                                  {agentAnalysis.attack_path.map((path: any, idx: number) => (
+                                      <div key={idx} className="flex gap-3 text-sm border-l-2 border-soc-cyan/50 pl-3 py-1">
+                                          <span className="font-bold text-soc-cyan min-w-[120px]">{path.stage}</span>
+                                          <span className="text-soc-text/80">{path.description}</span>
+                                      </div>
+                                  ))}
+                              </div>
+                          </div>
+                      )}
+
+                      {agentAnalysis.autonomous_action_recommendation && agentAnalysis.autonomous_action_recommendation.action && (
+                         <div className="p-3 bg-soc-red/10 border border-soc-red/30 rounded-lg">
+                              <h4 className="text-xs font-bold text-soc-red uppercase mb-1 flex items-center gap-2">
+                                  <ShieldAlert className="w-3 h-3" />
+                                  Autonomous Recommendation
+                              </h4>
+                              <div className="text-sm text-soc-text flex justify-between">
+                                 <span>{agentAnalysis.autonomous_action_recommendation.action}</span>
+                                 <span className="font-mono text-soc-red">Conf: {Math.round((agentAnalysis.autonomous_action_recommendation.confidence || 0) * 100)}%</span>
+                              </div>
+                         </div>
+                      )}
+                  </div>
+              )}
             </section>
 
             {/* Mitigations */}

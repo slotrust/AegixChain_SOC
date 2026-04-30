@@ -242,6 +242,16 @@ export async function initDb() {
       )
     `);
 
+    // Agent Analysis Table
+    db.exec(`
+      CREATE TABLE IF NOT EXISTS agent_analysis (
+        alert_id INTEGER PRIMARY KEY,
+        analysis_json TEXT NOT NULL,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY(alert_id) REFERENCES alerts(id)
+      )
+    `);
+
     // Blocked IPs Table (IPS)
     db.exec(`
       CREATE TABLE IF NOT EXISTS blocked_ips (
