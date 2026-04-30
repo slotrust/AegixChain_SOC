@@ -225,49 +225,19 @@ class MultiAgentSystem extends EventEmitter {
     this.on('target_LLM', async (msg: AgentMessage) => {
       const { eventData, findings, riskLevel, memoryContext, mitreContext } = msg.payload;
 
-      try {
-        const { compiledAnalystAgent } = await import('./analyst_agent.js');
-        // Invoke LangGraph Analyst Agent
-        const graphResult = await compiledAnalystAgent.invoke({
-           raw_events: [eventData],
-           correlated_chain: [],
-           mitre_mappings: mitreContext ? [mitreContext] : [],
-           explanation: "",
-           recommended_action: "None"
-        });
-        
-        const result = {
-           explanation: graphResult.explanation,
-           recommended_action: graphResult.recommended_action,
-           mitre_mappings: graphResult.mitre_mappings
-        };
-
-        this.dispatchMessage({
-          id: `msg-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
-          timestamp: new Date().toISOString(),
-          source: 'LLM',
-          target: 'Response',
-          payload: {
-            ...msg.payload,
-            explanation: result.explanation,
-            recommended_action: result.recommended_action,
-            mitre_mappings: result.mitre_mappings
-          }
-        });
-      } catch (err: any) {
-        // Fallback if LLM fails
-        this.dispatchMessage({
-          id: `msg-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
-          timestamp: new Date().toISOString(),
-          source: 'LLM',
-          target: 'Response',
-          payload: {
-            ...msg.payload,
-            explanation: "LangGraph LLM Engine synthesis failed. Proceeding with raw findings: " + findings.join("; "),
-            recommended_action: "Notify"
-          }
-        });
-      }
+      // LLM Engine disabled per user request
+      this.dispatchMessage({
+        id: `msg-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
+        timestamp: new Date().toISOString(),
+        source: 'LLM',
+        target: 'Response',
+        payload: {
+          ...msg.payload,
+          explanation: "LLM Engine Disabled. Using ML Sensor analysis: " + findings.join("; "),
+          recommended_action: riskLevel === 'High' ? "Block" : "Notify",
+          mitre_mappings: mitreContext ? [mitreContext] : []
+        }
+      });
     });
   }
 

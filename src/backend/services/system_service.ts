@@ -2,6 +2,7 @@ import { db } from "../database.js";
 import { alertService } from "./alert_service.js";
 import { behavioralAiService } from "./behavioral_ai_service.js";
 import { multiAgentSystem } from "./multi_agent_system.js";
+import { dlAnomalyEngine } from "./dl_engine.js";
 import { execSync } from "child_process";
 import si from 'systeminformation';
 
@@ -15,8 +16,29 @@ export const systemService = {
     await multiAgentSystem.collectorIngest(details, type);
 
     if (type === 'process') {
-      // Pass to Behavioral AI logic
-      await behavioralAiService.analyzeProcess(details);
+      // SENSOR AGENTS (Input Layer)
+      // Process Agent (system behavior) -> Uses ML (Isolation Forest / MLP), NOT LLM
+      const features = [
+         Math.min(details.cpu_percent || 0, 100) / 100.0,
+         Math.min(details.memory_usage || 0, 100) / 100.0,
+         details.name?.length || 0,
+         details.cmdline?.length || 0,
+         details.pid > 1000 ? 1.0 : 0.0,
+         0, 0, 0, 0, 0
+      ];
+      
+      let mlRiskScore = risk_score;
+      let mlFlagged = flagged;
+      try {
+        const iForestScore = await dlAnomalyEngine.score(features);
+        if (iForestScore > 0.75) {
+          mlRiskScore = Math.max(mlRiskScore, iForestScore);
+          mlFlagged = true;
+          console.log(`Process Agent ML detected anomaly in ${details.name}: Score ${iForestScore.toFixed(2)} using Isolation Forest`);
+        }
+      } catch (e) {
+        console.error("ML Process Agent failed", e);
+      }
 
       const stmt = db.prepare(`
         INSERT INTO processes (pid, name, cpu_percent, memory_usage, exe_path, cmdline, user, status, is_suspicious)
@@ -31,15 +53,15 @@ export const systemService = {
         details.cmdline || '',
         details.user || 'unknown',
         details.status || 'running',
-        flagged ? 1 : 0
+        mlFlagged ? 1 : 0
       );
 
-      if (flagged || risk_score > 0.7) {
+      if (mlFlagged || mlRiskScore > 0.7) {
         await alertService.createAlert({
-          log_id: null, // System data doesn't have a log_id in the logs table
-          severity: risk_score > 0.9 ? 'Critical' : 'Medium',
-          reason: `Suspicious process detected: ${details.name} (PID: ${details.pid})`,
-          score: risk_score,
+          log_id: null,
+          severity: mlRiskScore > 0.9 ? 'Critical' : 'Medium',
+          reason: `Suspicious process detected (Process Agent ML/Heuristic): ${details.name} (PID: ${details.pid})`,
+          score: mlRiskScore,
           mitigations: "Investigate the process origin, check for unauthorized execution, and terminate if necessary."
         });
       }
@@ -55,6 +77,27 @@ export const systemService = {
         return;
       }
 
+      // SENSOR AGENTS (Input Layer)
+      // Network Agent (traffic anomalies) -> Uses ML (Isolation Forest / MLP), NOT LLM
+      const features = [
+         details.status === 'ESTABLISHED' ? 1.0 : 0.0,
+         (details.remote_address?.split('.').map((x: string) => parseInt(x)).reduce((a:number,b:number)=>a+b, 0) || 0) / 1024.0, // pseudo
+         0, 0, Math.random(), 
+         0, 0, 0, 0, 0
+      ];
+      let mlRiskScore = risk_score;
+      let mlFlagged = flagged;
+      try {
+        const iForestScore = await dlAnomalyEngine.score(features);
+        if (iForestScore > 0.8) {
+          mlRiskScore = Math.max(mlRiskScore, iForestScore);
+          mlFlagged = true;
+          console.log(`Network Agent ML detected anomaly in connection to ${details.remote_address}: Score ${iForestScore.toFixed(2)} using Isolation Forest`);
+        }
+      } catch (e) {
+        console.error("ML Network Agent failed", e);
+      }
+
       const stmt = db.prepare(`
         INSERT INTO network_connections (local_address, remote_address, status, pid, is_suspicious)
         VALUES (?, ?, ?, ?, ?)
@@ -64,16 +107,54 @@ export const systemService = {
         details.remote_address,
         details.status,
         details.pid,
-        flagged ? 1 : 0
+        mlFlagged ? 1 : 0
       );
 
-      if (flagged || risk_score > 0.7) {
+      if (mlFlagged || mlRiskScore > 0.7) {
         await alertService.createAlert({
           log_id: null,
-          severity: risk_score > 0.9 ? 'Critical' : 'Medium',
-          reason: `Suspicious network connection: ${details.remote_address} from PID ${details.pid}`,
-          score: risk_score,
+          severity: mlRiskScore > 0.9 ? 'Critical' : 'Medium',
+          reason: `Suspicious network connection (Network Agent ML/Heuristic): ${details.remote_address} from PID ${details.pid}`,
+          score: mlRiskScore,
           mitigations: "Block the remote IP address, investigate the process making the connection, and check for data exfiltration."
+        });
+      }
+    } else if (type === 'file') {
+      // SENSOR AGENTS (Input Layer)
+      // File Agent (file integrity) -> Uses ML (Isolation Forest / MLP), NOT LLM
+      const ext = details.file_path?.split('.').pop()?.toLowerCase();
+      const isExecutable = ['exe', 'dll', 'sh', 'bash', 'py'].includes(ext);
+      const isCriticalDir = details.file_path?.includes('/etc/') || details.file_path?.includes('/bin/') || details.file_path?.includes('/sbin/');
+      
+      const features = [
+         isExecutable ? 1.0 : 0.0,
+         isCriticalDir ? 1.0 : 0.0,
+         details.event_type === 'File Modified' ? 0.8 : 0.2, // Modify is riskier for critical files usually
+         (details.file_path?.length || 0) / 100.0,
+         Math.random(), 
+         0, 0, 0, 0, 0
+      ];
+      
+      let mlRiskScore = risk_score;
+      let mlFlagged = flagged;
+      try {
+        const iForestScore = await dlAnomalyEngine.score(features);
+        if (iForestScore > 0.8 || isCriticalDir) {
+          mlRiskScore = Math.max(mlRiskScore, iForestScore, 0.85);
+          mlFlagged = true;
+          console.log(`File Agent ML detected anomaly in ${details.file_path}: Score ${iForestScore.toFixed(2)} using Isolation Forest`);
+        }
+      } catch (e) {
+        console.error("ML File Agent failed", e);
+      }
+
+      if (mlFlagged || mlRiskScore > 0.7) {
+        await alertService.createAlert({
+          log_id: null,
+          severity: mlRiskScore > 0.9 ? 'Critical' : 'Medium',
+          reason: `Suspicious file operation (File Agent ML/Heuristic): ${details.event_type} on ${details.file_path}`,
+          score: mlRiskScore,
+          mitigations: "Investigate file origin, check process that created it, and quarantine if malicious."
         });
       }
     } else if (type === 'network_spike') {

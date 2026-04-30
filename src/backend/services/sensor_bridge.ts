@@ -114,14 +114,10 @@ export const sensorBridge = {
                // We can log this as a special process or alert
                if (event.severity >= 6) {
                  await systemService.processData({
-                    type: 'process',
+                    type: 'file',
                     details: {
-                      pid: 0,
-                      name: 'fs_watcher',
-                      cpu_percent: 0,
-                      memory_usage: 0,
-                      exe_path: event.raw_data,
-                      status: 'File Event'
+                      file_path: event.raw_data,
+                      event_type: event.event_type
                     },
                     risk_score: event.severity / 10,
                     flagged: true
