@@ -59,7 +59,7 @@ export default function Sidebar({ activeTab, setActiveTab, alertCount, userRole 
               <item.icon className={`w-5 h-5 transition-colors ${isActive ? 'text-soc-cyan' : 'group-hover:text-soc-cyan/70'}`} />
               <span className="font-medium tracking-wide font-mono text-sm">{item.label}</span>
               {item.badge && item.badge > 0 ? (
-                <span className="ml-auto bg-soc-red/20 text-soc-red border border-soc-red/50 text-[10px] font-bold px-2 py-0.5 rounded-full shadow-[0_0_8px_rgba(255,71,87,0.4)]">
+                <span className={`ml-auto bg-soc-red/20 text-soc-red border border-soc-red/50 text-[10px] font-bold px-2 py-0.5 rounded-full shadow-[0_0_8px_rgba(255,71,87,0.4)] ${item.id === 'alerts' ? 'animate-pulse' : ''}`}>
                   {item.badge}
                 </span>
               ) : null}

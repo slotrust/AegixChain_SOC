@@ -277,6 +277,31 @@ export default function AlertsPanel({ onInvestigate }: AlertsPanelProps) {
                 })()}
               </div>
 
+              {(() => {
+                  let payloadData = alert.payload;
+                  let parsedPayload: any = null;
+                  try {
+                    parsedPayload = typeof payloadData === 'string' ? JSON.parse(payloadData) : payloadData;
+                  } catch (e) {
+                      parsedPayload = payloadData;
+                  }
+
+                  if (parsedPayload) {
+                      const payloadStr = typeof parsedPayload === 'object' ? JSON.stringify(parsedPayload) : String(parsedPayload);
+                      if (payloadStr && payloadStr !== '{}') {
+                         return (
+                            <div className="w-full text-left bg-soc-bg border border-soc-border rounded p-2 mb-3 overflow-x-auto">
+                                <span className="block text-[9px] uppercase tracking-wider text-soc-cyan mb-1 font-bold">Raw Payload Data</span>
+                                <code className="text-[10px] text-soc-muted font-mono whitespace-pre-wrap break-all">
+                                    {payloadStr}
+                                </code>
+                            </div>
+                         );
+                      }
+                  }
+                  return null;
+              })()}
+
               <div className="flex gap-2">
                 {activeTab === 'critical' && (
                   <button

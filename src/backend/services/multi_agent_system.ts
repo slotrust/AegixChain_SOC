@@ -302,6 +302,8 @@ class MultiAgentSystem extends EventEmitter {
         }
       } else if (finalDecision?.includes('Deploy_Honeypot')) {
             actionTaken = `Deployed Deception Layer for ${eventData.data?.remote_ip || eventData.data?.name || 'Local System'}`;
+      } else if (finalDecision?.includes('Ignore') || explanation?.includes('FALSE POSITIVE')) {
+            actionTaken = `Suppressed False Positive`;
       } else {
         actionTaken = 'User Notified';
       }
@@ -312,6 +314,7 @@ class MultiAgentSystem extends EventEmitter {
       if (actionTaken.includes('Block') && riskLevel === 'Low') reward = -1.0; // False positive penalty
       if (actionTaken.includes('Notify') && riskLevel === 'High') reward = -0.5; // Too passive
       if (actionTaken.includes('Notify') && riskLevel === 'Low') reward = 0.5; // Good passive
+      if (actionTaken.includes('Suppressed') && explanation?.includes('FALSE POSITIVE')) reward = 1.0; // successful FP identification
       
       rlAgent.learn(riskLevel, eventData.type || 'unknown', finalDecision, reward);
 
@@ -328,18 +331,19 @@ class MultiAgentSystem extends EventEmitter {
       });
       
       // Add to MITRE Timeline
-      if (mitreContext) {
+      if (mitreContext && !actionTaken.includes('Suppressed')) {
          mitreService.saveMitreEvent(null, mitreContext);
       }
 
       await alertService.createAlert({
         log_id: null,
-        severity: riskLevel === 'High' ? 'Critical' : 'Medium',
+        severity: riskLevel === 'High' && !actionTaken.includes('Suppressed') ? 'Critical' : 'Medium',
         reason: `Multi-Agent Consensus: ${explanation}`,
         score: msg.confidence || 0,
-        status: actionTaken.includes('Block') || actionTaken.includes('Isolate') ? 'auto_resolved' : 'active',
+        status: actionTaken.includes('Block') || actionTaken.includes('Isolate') ? 'auto_resolved' : (actionTaken.includes('Suppressed') ? 'suppressed' : 'active'),
         resolution_action: actionTaken,
-        mitigations: `Auto-Response executed: ${actionTaken}`
+        mitigations: `Auto-Response executed: ${actionTaken}`,
+        payload: JSON.stringify(eventData) // include the payload payload
       });
 
       this.dispatchMessage({

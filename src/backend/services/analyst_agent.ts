@@ -131,14 +131,14 @@ Output JSON: [{ "tactic": "...", "technique_name": "...", "technique_id": "..." 
 async function explainAndRespondNode(
   state: AnalystAgentState,
 ): Promise<Partial<AnalystAgentState>> {
-  const prompt = `You are a high-reasoning Security Analyst Agent powered by Deep Learning LLMs.
-Task: Analyze the following attack chain and MITRE mappings.
-1. Cross-reference the raw payloads (IPs, process names, command lines) with your internal knowledge base (simulating online threat intel research).
-2. Determine if this is a FALSE POSITIVE (e.g. normal admin activity, legitimate software). Verify every raw data payload.
-3. IMPORTANT: Even if it appears to be a FALSE POSITIVE, deeply analyze all logs and payload data for any hidden suspicious/malicious content or secondary payloads sent by the attacker.
+  const prompt = `You are a group of three elite Security AI Agents (Agent Alpha: Aggressive Defender, Agent Beta: Threat Intel Researcher, Agent Gamma: ML Anomaly Specialist) powered by Deep Learning.
+Task: Analyze the following attack chain and MITRE mappings by engaging in a short simulated debate.
+1. Have the agents debate the raw payloads (IPs, process names, command lines) and their threat potential.
+2. Cross-reference the raw payloads with your internal knowledge base. Determine if this is a FALSE POSITIVE (e.g. normal admin activity).
+3. IMPORTANT: Even if it appears to be a FALSE POSITIVE, one agent MUST deeply analyze all logs and payload data for any hidden suspicious/malicious content or secondary payloads sent by the attacker.
 4. If a hidden payload is found, mark "hidden_payload_found" as true, and recommend IP blocking.
-5. Explain the complex attack path and the Deep Learning / ML model's anomaly decision to a human operator in clear terms.
-6. Recommend a response action (Block, Isolate, Notify, Ignore, Deploy_Honeypot).
+5. Provide a summary of the debate, explain the complex attack path and the Deep Learning / ML model's anomaly decision to a human operator in clear terms.
+6. Conclude with a final consensus on the response action (Block, Isolate, Notify, Ignore, Deploy_Honeypot).
 
 Attack Chain: ${JSON.stringify(state.correlated_chain)}
 Original Raw Events: ${JSON.stringify(state.raw_events)}
@@ -146,7 +146,8 @@ MITRE Mappings: ${JSON.stringify(state.mitre_mappings)}
 
 Output JSON ONLY:
 {
-  "explanation": "Detailed explanation of the attack path, incorporating your simulated online research findings on the raw payloads and why the deep learning model flagged it...",
+  "debate_log": "Agent Alpha: ..., Agent Beta: ..., Agent Gamma: ...",
+  "explanation": "Summary of debate. Detailed explanation of the attack path and hidden data...",
   "recommended_action": "Block",
   "is_false_positive": false,
   "hidden_payload_found": false,
@@ -162,11 +163,11 @@ Output JSON ONLY:
         .trim() || "{}";
     const parsed = JSON.parse(text);
 
-    let finalExplanation = parsed.explanation || "Failed to analyze.";
+    let finalExplanation = `[MULTI-AGENT DEBATE LOG]\n${parsed.debate_log}\n\n[CONSENSUS EXPLANATION]\n` + (parsed.explanation || "Failed to analyze.");
 
     if (parsed.hidden_payload_found && parsed.malicious_ip) {
       finalExplanation =
-        `[CRITICAL: HIDDEN PAYLOAD DETECTED] Although initially appearing normal, deep analysis uncovered malicious hidden payloads referencing IP ${parsed.malicious_ip}. Initiating immediate block. Details: ` +
+        `[CRITICAL: HIDDEN PAYLOAD DETECTED BY AI AGENT DEBATE] Although initially appearing normal, deep analysis uncovered malicious hidden payloads referencing IP ${parsed.malicious_ip}. Initiating immediate block. Details:\n` +
         finalExplanation;
       parsed.recommended_action = "Block_IP_Hidden";
       // Dynamically block
@@ -174,16 +175,27 @@ Output JSON ONLY:
         .then(({ ipsService }) => {
           ipsService.blockIp(
             parsed.malicious_ip,
-            "[AI Agent] Hidden Malicious Payload Detected",
+            "[AI Agent Consensus] Hidden Malicious Payload Detected",
             24,
           );
+          // And also log a Critical Alert directly
+          import("./alert_service.js").then(({ alertService }) => {
+              alertService.createAlert({
+                  severity: 'Critical',
+                  reason: `[AI Agent Consensus] Hidden Malicious Payload blocked for IP ${parsed.malicious_ip}`,
+                  score: 0.99,
+                  status: 'auto_resolved',
+                  resolution_action: 'Blocked IP',
+                  mitigations: 'IP Blocked based on AI Debate'
+              });
+          });
         })
         .catch((e) => console.error("Could not dynamic block:", e));
     } else if (parsed.is_false_positive) {
-      finalExplanation = "[RESEARCHED: FALSE POSITIVE] " + finalExplanation;
+      finalExplanation = "[DEBATE OUTCOME: FALSE POSITIVE] " + finalExplanation;
       parsed.recommended_action = "Ignore";
     } else {
-      finalExplanation = "[RESEARCHED: THREAT CONFIRMED] " + finalExplanation;
+      finalExplanation = "[DEBATE OUTCOME: THREAT CONFIRMED] " + finalExplanation;
     }
 
     return {
@@ -192,7 +204,7 @@ Output JSON ONLY:
     };
   } catch (e) {
     return {
-      explanation: "Error during LLM analysis.",
+      explanation: "Error during LLM Multi-Agent debate analysis.",
       recommended_action: "Notify",
     };
   }
